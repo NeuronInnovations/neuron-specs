@@ -1,0 +1,117 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://neuron.world/schemas/neuron.rid-1.schema.json",
+  "title": "Neuron Remote-ID SAPIENT Extension",
+  "description": "Machine-readable form of neuron.rid-1.extension.md (neuron.rid/1). Validates the non-standard parts of a neuron-rid-bridge SAPIENT DetectionReport: the rid.* objectInfo namespace (which, per spec 017, now also carries the operator location, the RF transport/strength, and the broadcast-authentication block under rid.auth.*). Apply ALONGSIDE the SAPIENT DetectionReport schema — native fields (object_id ULID, velocity, classification, signal) are intentionally left unconstrained here.",
+  "x-schema-id": "neuron.rid/1",
+  "x-version": "1.1.0",
+  "type": "object",
+  "properties": {
+    "objectInfo": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/objectInfoEntry" }
+    }
+  },
+  "$defs": {
+    "objectInfoEntry": {
+      "type": "object",
+      "$comment": "JSON-projection view of a SAPIENT TrackObjectInfo: {type, value} plus the JSON-view-only `units` (never a wire field). additionalProperties:false catches stray/typo keys; the wire `error` sub-field is intentionally not modeled because rid.* entries carry accuracy as separate rid.*AccuracyM keys, never per-entry error. Add `error` here if a future rid.* field ever maps to TrackObjectInfo.error.",
+      "required": ["type", "value"],
+      "properties": {
+        "type": { "type": "string" },
+        "value": { "type": "string" },
+        "units": { "type": "string" }
+      },
+      "additionalProperties": false,
+      "allOf": [
+        { "if": { "required": ["type"], "properties": { "type": { "pattern": "^rid\\." } } },
+          "then": { "properties": { "type": { "$ref": "#/$defs/ridKey" } } } },
+        { "if": { "required": ["type"], "properties": { "type": { "enum": ["rid.idType", "rid.idType2"] } } },
+          "then": { "properties": { "value": { "$ref": "#/$defs/idType" } } } },
+        { "if": { "required": ["type"], "properties": { "type": { "enum": ["rid.uaType", "rid.uaType2"] } } },
+          "then": { "properties": { "value": { "$ref": "#/$defs/uaType" } } } },
+        { "if": { "required": ["type"], "properties": { "type": { "const": "rid.selfIdType" } } },
+          "then": { "properties": { "value": { "$ref": "#/$defs/selfIdType" } } } },
+        { "if": { "required": ["type"], "properties": { "type": { "const": "rid.status" } } },
+          "then": { "properties": { "value": { "$ref": "#/$defs/locationStatus" } } } },
+        { "if": { "required": ["type"], "properties": { "type": { "const": "rid.heightType" } } },
+          "then": { "properties": { "value": { "enum": ["AGL", "AboveTakeoff"] } } } },
+        { "if": { "required": ["type"], "properties": { "type": { "const": "rid.classificationType" } } },
+          "then": { "properties": { "value": { "const": "EU" } } } },
+        { "if": { "required": ["type"], "properties": { "type": { "const": "rid.operatorLocationType" } } },
+          "then": { "properties": { "value": { "enum": ["TakeOff", "Dynamic", "Fixed", "Unknown"] } } } },
+        { "if": { "required": ["type"], "properties": { "type": { "const": "rid.operatorIdType" } } },
+          "then": { "properties": { "value": { "$ref": "#/$defs/typeOrTypeN" } } } },
+        { "if": { "required": ["type"], "properties": { "type": { "const": "rid.transport" } } },
+          "then": { "properties": { "value": { "enum": ["BLE legacy", "BLE long range", "WiFi NaN", "WiFi beacon"] } } } },
+        { "if": { "required": ["type"], "properties": { "type": { "const": "rid.auth.authType" } } },
+          "then": { "properties": { "value": { "$ref": "#/$defs/authType" } } } },
+        { "if": { "required": ["type"], "properties": { "type": { "const": "rid.auth.verification" } } },
+          "then": { "properties": { "value": { "enum": ["unsigned", "unverified", "verified", "failed"] } } } },
+        { "if": { "required": ["type"], "properties": { "type": { "const": "rid.auth.signaturePresent" } } },
+          "then": { "properties": { "value": { "enum": ["true", "false"] } } } },
+        { "if": { "required": ["type"], "properties": { "type": { "enum": [
+              "rid.channel", "rid.rssiDbm", "rid.categoryEU", "rid.classEU", "rid.areaCount", "rid.areaRadiusM",
+              "rid.baroAltitudeM", "rid.heightM", "rid.timestampSecsThisHour",
+              "rid.speedAccuracyMps", "rid.baroAccuracyM", "rid.timestampAccuracySec",
+              "rid.areaCeilingM", "rid.areaFloorM", "rid.systemTimestampSecsSince2019",
+              "rid.operatorLatDeg", "rid.operatorLonDeg", "rid.operatorAltM",
+              "rid.auth.length", "rid.auth.pages", "rid.auth.timestampSecsSince2019"
+            ] } } },
+          "then": { "properties": { "value": { "$ref": "#/$defs/numericString" } } } }
+      ]
+    },
+
+    "ridKey": {
+      "description": "Every recognised rid.* objectInfo key. An unknown rid.* key is a schema violation (catches typos); non-rid.* keys are out of scope for this extension.",
+      "enum": [
+        "rid.idType", "rid.uasId", "rid.uaType",
+        "rid.idType2", "rid.uasId2", "rid.uaType2",
+        "rid.macAddress", "rid.channel", "rid.transport", "rid.rssiDbm",
+        "rid.selfId", "rid.selfIdType", "rid.status",
+        "rid.baroAltitudeM", "rid.heightM", "rid.heightType", "rid.timestampSecsThisHour",
+        "rid.speedAccuracyMps", "rid.baroAccuracyM", "rid.timestampAccuracySec",
+        "rid.classificationType", "rid.categoryEU", "rid.classEU",
+        "rid.areaCount", "rid.areaRadiusM", "rid.areaCeilingM", "rid.areaFloorM",
+        "rid.systemTimestampSecsSince2019",
+        "rid.operatorLocationType", "rid.operatorLatDeg", "rid.operatorLonDeg", "rid.operatorAltM",
+        "rid.operatorId", "rid.operatorIdType",
+        "rid.auth.authType", "rid.auth.signaturePresent", "rid.auth.verification",
+        "rid.auth.signatureB64", "rid.auth.timestampSecsSince2019", "rid.auth.length", "rid.auth.pages"
+      ]
+    },
+
+    "idType": {
+      "type": "string",
+      "enum": ["None", "SerialNumber", "CAARegistration", "UTMAssignedUUID", "SpecificSessionID"]
+    },
+    "uaType": {
+      "type": "string",
+      "enum": ["Aeroplane", "Multirotor", "Gyroplane", "HybridLift", "Ornithopter", "Glider",
+        "Kite", "FreeBalloon", "CaptiveBalloon", "Airship", "FreeFallParachute", "Rocket",
+        "TetheredPowered", "GroundObstacle", "Other"]
+    },
+    "selfIdType": {
+      "type": "string",
+      "anyOf": [{ "enum": ["Text", "Emergency", "ExtendedStatus"] }, { "pattern": "^Type[0-9]+$" }]
+    },
+    "locationStatus": {
+      "type": "string",
+      "enum": ["Undeclared", "Ground", "Airborne", "Emergency", "RemoteIDFailure"]
+    },
+    "authType": {
+      "type": "string",
+      "anyOf": [{ "enum": ["None", "UASIDSignature", "OperatorIDSignature", "MessageSetSignature",
+        "NetworkRemoteID", "SpecificMethod"] }, { "pattern": "^Type[0-9]+$" }]
+    },
+    "typeOrTypeN": {
+      "type": "string",
+      "anyOf": [{ "const": "OperatorID" }, { "pattern": "^Type[0-9]+$" }]
+    },
+    "numericString": {
+      "type": "string",
+      "description": "A decimal number rendered as a string (objectInfo values are always strings).",
+      "pattern": "^-?[0-9]+(\\.[0-9]+)?([eE][-+]?[0-9]+)?$"
+    }
+  }
+}

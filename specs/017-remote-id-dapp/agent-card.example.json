@@ -1,0 +1,126 @@
+{
+  "_readme": "PROMOTED TEMPLATE (Annex of spec 017). The agent-card the DroneScout ASM's Seller Proxy publishes off-chain on the Neuron-blind translator's behalf (015 FR-S96); the EIP-8004 (007) Identity Registry entry stores the agentId + the agentURI pointing to THIS document. STRUCTURE (015 FR-S20a): this IS the 003 agentURI registration file — its `services[]` follows the Neuron 003/004 schema and MUST carry the mandatory services: three neuron-topic (stdIn/stdOut/stdErr, 003 FR-R02/R08), one neuron-p2p-exchange (003 FR-R03), plus the 008 neuron-commerce service(s) for each consumable feed (here: rid; 015 FR-S70). An ERC-8004 explorer reads name/description + services[] (topics, p2p, commerce) WITHOUT SAPIENT. The additive blocks identity (the FR-S22 PeerID/key binding + on-chain 007 reference) and capabilities/statusDefinition/tasking/extensions (the SAPIENT Registration content = the ICD, FR-S20) + trust (the SAPIENT signature-verification locus) ride alongside — an 8004 explorer ignores them, a SAPIENT-aware consumer reads them. PROXY-vs-TRANSLATOR split: the Seller Proxy fills the Neuron-side blocks (services[] + identity) and owns the on-chain identity; the translator supplies the SAPIENT-content blocks. The top-level `type` is OPTIONAL upstream-ERC-8004 (registration-v1) alignment; 003/004 govern the structure. Replace every <...> placeholder. Illustrative: the NORMATIVE requirements are 017 FR-R-A02/A03 + 015 FR-S20/S20a/S24 + 003/004; where this skeleton conflicts with the verified DSTL protos, 017's 'Mapping — reconciliations' table, or 003/004, those GOVERN. The SAPIENT-content field names approximate the BSI Flex 335 v2.0 protos — reconcile before production.",
+
+  "type": "https://eips.ethereum.org/EIPS/eip-8004#registration-v1",
+  "name": "neuron-rid-bridge DroneScout ASM",
+  "description": "SAPIENT Autonomous Sensor Module: decodes broadcast Remote ID (OpenDroneID) from a DroneScout sensor and emits SAPIENT DetectionReports with the neuron.rid/1 extension.",
+
+  "services": [
+    {
+      "type": "neuron-topic",
+      "name": "stdIn",
+      "version": "1.0.0",
+      "channel": "stdIn",
+      "transport": "hcs",
+      "anchor": "hedera-mainnet",
+      "endpoint": "hcs://<0.0.topicId-in>",
+      "config": { "network": "hedera-mainnet", "topicId": "<0.0.topicId-in>" },
+      "_note": "Auditable 004 lane, inbound to the ASM: HLDMM->ASM control (RegistrationAck/Task/AlertAck), 015 FR-S12. Schema per 003 FR-R02 / 004 FR-T14."
+    },
+    {
+      "type": "neuron-topic",
+      "name": "stdOut",
+      "version": "1.0.0",
+      "channel": "stdOut",
+      "transport": "hcs",
+      "anchor": "hedera-mainnet",
+      "endpoint": "hcs://<0.0.topicId-out>",
+      "config": { "network": "hedera-mainnet", "topicId": "<0.0.topicId-out>" },
+      "_note": "Routine ASM output: the in-session Registration replay, TaskAck, and the periodic StatusReport (015 FR-S12)."
+    },
+    {
+      "type": "neuron-topic",
+      "name": "stdErr",
+      "version": "1.0.0",
+      "channel": "stdErr",
+      "transport": "hcs",
+      "anchor": "hedera-mainnet",
+      "endpoint": "hcs://<0.0.topicId-err>",
+      "config": { "network": "hedera-mainnet", "topicId": "<0.0.topicId-err>" },
+      "_note": "Exceptional ASM signals: Alert and the SAPIENT Error message (015 FR-S12)."
+    },
+    {
+      "type": "neuron-p2p-exchange",
+      "name": "p2p",
+      "version": "1.0.0",
+      "peerID": "<libp2p-peer-id>",
+      "protocol": "/neuron/multiaddr-exchange/1.0.0",
+      "topicRef": "stdIn",
+      "_note": "How a consumer obtains the ASM multiaddr for the 009 p2p DetectionReport stream (003 FR-R03 / 004 FR-T17). The /sapient/detection/2.0.0 stream rides this p2p connection. The actual multiaddr is exchanged over the referenced topic, not stored here."
+    },
+    {
+      "type": "neuron-commerce",
+      "name": "rid",
+      "version": "1.0.0",
+      "interface": "SAPIENT",
+      "endpoint": "<e.g. /ip4/.../udp/.../quic-v1/p2p/<peer-id>>",
+      "settlement": { "binding": "<hedera-native | evm-escrow>" },
+      "pricing": { "amount": "0", "currency": "<e.g. HBAR>", "unit": "<denomination>", "interval": "0" },
+      "_note": "The consumable SAPIENT feed (008 FR-P01/P03, 015 FR-S70). DetectionReports ride /sapient/detection/2.0.0 on the 009 p2p stream reachable via the neuron-p2p-exchange service above. 017 fixes neither unit nor amount (CL-R3); free = amount '0'; interval '0' = one-time; settlement is deployment-specific."
+    }
+  ],
+
+  "identity": {
+    "_note": "Additive Neuron block (outside the 003 service schema): the FR-S22 PeerID/key binding plus the on-chain 007 reference. peerId/publicKey is the trust anchor and MUST match the on-chain key; the Seller Proxy owns and binds it (015 FR-S94). agentId/identityRegistry name the on-chain 007 entry whose agentURI resolves to THIS document (015 FR-S24).",
+    "peerId": "<libp2p-peer-id>",
+    "publicKeyMultibase": "<multibase-encoded-public-key>",
+    "keyType": "ed25519",
+    "controller": "<eip155:1:0x...-owner-address>",
+    "agentId": "<on-chain-agent-id>",
+    "identityRegistry": "<eip155:<chain-id>:0x-identity-registry-address>"
+  },
+
+  "capabilities": {
+    "_note": "Additive SAPIENT-content block (the ICD = the SAPIENT Registration content, 015 FR-S20). An ERC-8004 explorer ignores it; a SAPIENT-aware consumer reads it.",
+    "interface": "SAPIENT",
+    "icd": "BSI Flex 335",
+    "role": "ASM",
+    "scanType": "FIXED",
+    "trackingType": "TRACK",
+    "_trackingNote": "→ SAPIENT mode_definition.scan_type = SCAN_TYPE_FIXED, tracking_type = TRACKING_TYPE_TRACK (017 FR-R-A02 / FR-R-D02): the RF footprint is fixed/omnidirectional, and a stable object_id is persisted per drone keyed on the broadcast Remote-ID identity (BasicID[0].UASID) across broken tracks and BLE MAC rotation — the MAC is the transient radio key, not the id key.",
+    "messages": ["Registration", "RegistrationAck", "StatusReport", "DetectionReport", "Task", "TaskAck"],
+    "output": {
+      "message": "DetectionReport",
+      "encoding": "<protobuf | json>"
+    },
+    "detects": ["UAV"],
+    "classificationTaxonomy": ["UAV"],
+    "_classificationNote": "Taxonomy is UAV ONLY (017 FR-R-A04). The operator is NOT a separate object class: per the one-report model (FR-R-D04 / clarification 2026-05-30) operator data rides the SAME UAV DetectionReport as rid.operator* object_info under the neuron.rid/1 extension below — metadata on the craft, not a declared class. (A deployment that genuinely tracks the operator as its own moving object uses the linked-second-detection alternative, Mapping note O1 — still not a new taxonomy class.)",
+    "coordinateSystem": "WGS84",
+    "altitudeDatum": "geometric",
+    "coverage": {
+      "type": "rf-broadcast-reception",
+      "note": "RID is received, not ranged; coverage is the RF reception footprint of the sensor, not a steerable FoV. Fill with the sensor's sited reception area if known."
+    }
+  },
+
+  "statusDefinition": {
+    "statusInterval": "PT10S",
+    "note": "SAPIENT Registration.status_definition.status_interval (015 FR-S20): the cadence at which this ASM emits StatusReports (sensor health/coverage/mode) on the auditable 004 lane. This is the SAPIENT heartbeat cadence, NOT the Neuron 005 liveness heartbeat (node ALIVE/OFFLINE), which the node emits separately (015 FR-S31). Replace PT10S with the sited cadence."
+  },
+
+  "tasking": {
+    "note": "SAPIENT mode_definition.task — the controls/filters this ASM accepts (015 FR-S25/S26). CONTROL_STOP + CONTROL_START are a MANDATORY per-session baseline (015 FR-S29 / 017 FR-R-D09): a well-formed STOP MUST be acked and MUST cease DetectionReport emission to THAT session within ceaseWindow; CONTROL_START resumes without a new Registration; neither affects any other consumer's stream. Per-session OUTPUT FILTERS accepted: region_definition + class_filter_definition. NO detection_report_rate decimation (RID is bursty/low-rate). An altitude-band filter via neuron.rid/1 is PENDING (017 CL-R7) and not yet accepted.",
+    "acceptedControls": ["CONTROL_START", "CONTROL_STOP"],
+    "acceptedCommands": [],
+    "acceptedFilters": ["region_definition", "class_filter_definition"],
+    "ceaseWindow": "PT2S",
+    "ceaseWindowNote": "Max latency from a CONTROL_STOP TaskAck to DetectionReports ceasing on that session (015 FR-S29); bounded, hard ceiling PT5S."
+  },
+
+  "extensions": [
+    {
+      "id": "neuron.rid/1",
+      "appliesTo": "DetectionReport",
+      "spec": "./neuron.rid-1.extension.md",
+      "schema": "./neuron.rid-1.schema.json",
+      "schemaHash": "sha256:<hash-of-neuron.rid-1.schema.json>",
+      "note": "Carries the Remote ID payload (rid.* objectInfo namespace) and the authentication block. An HLDMM that does not load this schema ignores rid.* entries and the authentication field per SAPIENT extension rules."
+    }
+  ],
+
+  "trust": {
+    "authVerificationLocus": "hldmm",
+    "note": "SAPIENT signature-verification locus. The ASM forwards authentication.signatureB64 with verification=unsigned|unverified. The HLDMM verifies it against the identity key above (resolved via this card / the on-chain 007 entry) and sets verification=verified|failed."
+  }
+}

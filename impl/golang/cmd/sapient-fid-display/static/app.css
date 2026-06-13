@@ -1,0 +1,337 @@
+/* Neuron SAPIENT FID — lean dark theme.
+ * Sibling of cmd/fid-display's UI (palette-compatible) but SAPIENT-only:
+ * teal accent for tracks, amber for operators, honest-label pills. */
+
+:root {
+  --bg:          #0b1018;
+  --panel:       #121a26;
+  --panel-edge:  #1e2a3c;
+  --text:        #dbe6f4;
+  --text-muted:  #8294ab;
+  --sapient:     #2dd4bf;   /* teal — SAPIENT track accent */
+  --aircraft:    #cbd5e1;   /* light slate — ADS-B aircraft (neuron.adsb/1) */
+  --sensor:      #e879f9;   /* fuchsia — operator-configured sensor */
+  --operator:    #fbbf24;   /* amber — operator/pilot */
+  --friendly:    #38bdf8;   /* sky — FRIENDLY demo pill */
+  --sim:         #f472b6;   /* pink — EIP-8004 SIM pill */
+  --wire:        #a78bfa;   /* violet — protobuf wire pill */
+  --ok:          #34d399;
+  --warn:        #fbbf24;
+  --bad:         #f87171;
+}
+
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font: 14px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  display: flex; flex-direction: column;
+}
+
+/* ─── Header ─── */
+#chrome {
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: 6px 12px;
+  padding: 10px 16px; background: var(--panel);
+  border-bottom: 1px solid var(--panel-edge);
+}
+#chrome .brand-text { min-width: 0; }
+.brand-text h1 { margin: 0; font-size: 16px; letter-spacing: .02em; }
+.brand-text .tagline { margin: 2px 0 0; font-size: 12px; color: var(--text-muted); }
+.badge {
+  font-size: 11px; padding: 3px 10px; border-radius: 999px;
+  border: 1px solid var(--panel-edge); color: var(--text-muted);
+}
+.badge[data-state="live"]         { color: var(--ok);   border-color: var(--ok); }
+.badge[data-state="connecting"]   { color: var(--warn); border-color: var(--warn); }
+.badge[data-state="reconnecting"] { color: var(--bad);  border-color: var(--bad); }
+
+/* ─── Stage layout ─── */
+#stage { flex: 1; display: flex; min-height: 0; position: relative; }
+#rail {
+  width: 340px; min-width: 340px; overflow-y: auto;
+  padding: 12px; background: var(--panel);
+  border-right: 1px solid var(--panel-edge);
+  display: flex; flex-direction: column; gap: 12px;
+}
+#map { flex: 1; min-width: 0; background: #0a0e14; }
+@media (max-width: 900px) {
+  #rail { width: 280px; min-width: 280px; }
+}
+
+/* ─── Cards ─── */
+.card {
+  background: var(--bg); border: 1px solid var(--panel-edge);
+  border-radius: 10px; padding: 12px;
+}
+.card h2 { margin: 0 0 2px; font-size: 13px; display: flex; align-items: center; gap: 7px; }
+.card .subtitle { margin: 0 0 10px; font-size: 11px; color: var(--text-muted); }
+.card.compact .agent-grid { margin-top: 6px; }
+.swatch { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
+.swatch.sapient { background: var(--sapient); }
+
+.metric-row { display: flex; gap: 22px; align-items: baseline; }
+.count { font-size: 26px; font-weight: 700; }
+.count.tracks { color: var(--sapient); }
+.count.operators { color: var(--operator); }
+.count-label { font-size: 11px; color: var(--text-muted); margin-left: 5px; }
+
+.freshness { display: flex; align-items: center; gap: 7px; margin-top: 8px; font-size: 11px; color: var(--text-muted); }
+.freshness .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--panel-edge); }
+.freshness[data-state="fresh"] .dot { background: var(--ok); }
+.freshness[data-state="warm"]  .dot { background: var(--warn); }
+.freshness[data-state="stale"] .dot { background: var(--bad); }
+
+/* ─── Pills (honest labels) ─── */
+.badge-strip { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 6px; }
+.pill {
+  font-size: 10px; font-weight: 700; letter-spacing: .04em;
+  padding: 2px 8px; border-radius: 999px; border: 1px solid;
+}
+.pill.friendly { color: var(--friendly); border-color: var(--friendly); }
+.pill.adsb     { color: var(--aircraft); border-color: var(--aircraft); }
+.pill.sim      { color: var(--sim);      border-color: var(--sim); }
+.pill.onchain  { color: var(--ok);       border-color: var(--ok); }
+.pill.wire     { color: var(--wire);     border-color: var(--wire); }
+.pill.feed     { color: var(--text-muted); border-color: var(--panel-edge); }
+
+/* ─── Agent Card grid ─── */
+.agent-grid { display: grid; grid-template-columns: 78px 1fr; gap: 4px 10px; margin: 0; font-size: 11.5px; }
+.agent-grid dt { color: var(--text-muted); }
+.agent-grid dd { margin: 0; overflow-wrap: anywhere; }
+.agent-grid dd.mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11px; }
+
+/* ─── Map markers ───
+ * The .marker div fills its (oversized) divIcon container, so the click
+ * target is ~30px while the visible glyph stays ~20-26px. Glyphs carry a
+ * dark outline + light halo so live tracks read on light AND dark tiles;
+ * heading rotation lives on inner elements so hitbox/ring stay aligned. */
+.marker { position: relative; width: 100%; height: 100%; cursor: pointer; }
+.marker:hover { transform: scale(1.18); }
+.marker.sapient-track .shape {
+  position: absolute; left: 50%; top: 50%;
+  width: 18px; height: 18px; margin: -9px 0 0 -9px; border-radius: 50%;
+  background: var(--sapient);
+  border: 2px solid #0b1220;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, .85), 0 0 10px rgba(45, 212, 191, .8);
+}
+.marker.sapient-track .heading {
+  position: absolute; inset: 0; display: flex; justify-content: center;
+}
+.marker.sapient-track .heading::before {
+  content: ""; width: 0; height: 0; margin-top: -3px;
+  border-left: 5px solid transparent; border-right: 5px solid transparent;
+  border-bottom: 8px solid var(--sapient);
+  filter: drop-shadow(0 0 2px rgba(11, 18, 32, .9));
+}
+.marker.sapient-aircraft { display: flex; align-items: center; justify-content: center; }
+.marker.sapient-aircraft svg {
+  display: block;
+  fill: var(--aircraft);
+  stroke: #0f172a; stroke-width: 1.6; paint-order: stroke;
+  filter: drop-shadow(0 1px 2px rgba(11, 18, 32, .6)) drop-shadow(0 0 6px rgba(255, 255, 255, .55));
+}
+.marker.sapient-operator .shape {
+  position: absolute; left: 50%; top: 50%;
+  width: 13px; height: 13px; margin: -6.5px 0 0 -6.5px; transform: rotate(45deg);
+  background: transparent; border: 2.5px solid var(--operator);
+  box-shadow: 0 0 0 1.5px rgba(11, 18, 32, .75), 0 0 6px var(--operator);
+}
+
+/* Legend minis */
+#legend {
+  position: absolute; right: 12px; bottom: 24px; z-index: 800;
+  background: rgba(18, 26, 38, .92); border: 1px solid var(--panel-edge);
+  border-radius: 10px; padding: 10px 12px; font-size: 11.5px;
+}
+#legend .row { display: flex; align-items: center; gap: 8px; margin: 3px 0; }
+.mini { width: 11px; height: 11px; display: inline-block; }
+.mini.drone {
+  border-radius: 50%; background: var(--sapient);
+  border: 1.5px solid #0b1220; box-shadow: 0 0 0 1.5px rgba(255, 255, 255, .75);
+}
+.mini.aircraft {
+  background: var(--aircraft);
+  clip-path: polygon(50% 0%, 60% 38%, 100% 50%, 60% 60%, 56% 82%, 68% 92%, 68% 100%, 50% 92%, 32% 100%, 32% 92%, 44% 82%, 40% 60%, 0% 50%, 40% 38%);
+  filter: drop-shadow(0 0 1px #0f172a);
+}
+.mini.operator { transform: rotate(45deg); border: 2px solid var(--operator); }
+
+/* ─── Popup ─── */
+.leaflet-popup-content-wrapper {
+  background: var(--panel); color: var(--text);
+  border: 1px solid var(--panel-edge); border-radius: 10px;
+}
+.leaflet-popup-tip { background: var(--panel); }
+.leaflet-popup-content { margin: 10px 12px; min-width: 280px; }
+.popup .pop-head {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  font-weight: 700; margin-bottom: 6px; flex-wrap: wrap;
+}
+.popup .pop-head .id { font-family: ui-monospace, Menlo, monospace; font-size: 12.5px; }
+.popup .sect {
+  margin-top: 7px; padding-top: 6px; border-top: 1px dashed var(--panel-edge);
+  font-size: 10px; font-weight: 700; letter-spacing: .06em; color: var(--text-muted);
+}
+.popup .row { display: flex; justify-content: space-between; gap: 12px; font-size: 12px; margin: 2px 0; }
+.popup .row .k { color: var(--text-muted); }
+.popup .row .v { text-align: right; overflow-wrap: anywhere; }
+.popup .row .v.mono { font-family: ui-monospace, Menlo, monospace; font-size: 11px; }
+.popup .pop-foot {
+  margin-top: 8px; padding-top: 6px; border-top: 1px solid var(--panel-edge);
+  display: flex; justify-content: space-between; font-size: 10.5px; color: var(--text-muted);
+}
+
+/* ─── Footer honesty note ─── */
+#honesty {
+  padding: 6px 16px; font-size: 11px; color: var(--text-muted);
+  background: var(--panel); border-top: 1px solid var(--panel-edge);
+}
+#honesty strong { color: var(--wire); }
+
+/* Per-modality recenter controls: one button per modality ("live aircraft" /
+   "live drones"), each with a live count badge; a modality with 0 live tracks
+   is disabled — honest, never implying liveness. Standalone (no .leaflet-bar)
+   so Leaflet's fixed 30px button metrics can't clip the labels. */
+.recenter-ctl { display: flex; flex-direction: column; gap: 6px; }
+.recenter-ctl a {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  font: 600 12px/1 system-ui, sans-serif;
+  letter-spacing: .02em;
+  white-space: nowrap;
+  text-decoration: none;
+  color: var(--text);
+  background: var(--panel);
+  border: 1px solid var(--panel-edge);
+  border-radius: 6px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, .45);
+  cursor: pointer;
+}
+.recenter-ctl a:hover { background: var(--panel-edge); color: var(--text); }
+.recenter-ctl a .ct {
+  font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 999px;
+  background: var(--panel-edge); color: var(--text);
+}
+.recenter-ctl a.disabled {
+  opacity: .5; cursor: default;
+}
+.recenter-ctl a.disabled:hover { background: var(--panel); }
+.recenter-ctl a.disabled .ct { color: var(--text-muted); }
+
+/* ─── Multi-source redesign (2026-06-11) ─── */
+
+/* Collapsible rail cards */
+details.card > summary {
+  cursor: pointer; font-size: 12px; font-weight: 700; letter-spacing: .06em;
+  color: var(--text); list-style: none; display: flex; align-items: center; gap: 6px;
+}
+details.card > summary::before { content: "▸"; color: var(--text-muted); font-size: 10px; transition: transform .15s; }
+details.card[open] > summary::before { transform: rotate(90deg); }
+details.card > summary::-webkit-details-marker { display: none; }
+.card .placeholder { font-size: 11.5px; color: var(--text-muted); margin: 8px 0 0; }
+.card .threshold { font-size: 10.5px; color: var(--text-muted); margin: 6px 0 0; }
+.honest-note { font-size: 10.5px; color: var(--text-muted); font-style: italic; margin: 4px 0 0; }
+.muted { color: var(--text-muted); font-weight: 400; }
+
+/* Source cards */
+.source-card {
+  margin-top: 10px; padding: 9px 10px; border: 1px solid var(--panel-edge);
+  border-radius: 8px; background: var(--bg);
+}
+.source-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.source-name { font-size: 12.5px; font-weight: 700; min-width: 0; overflow-wrap: anywhere; }
+.source-sub { margin: 3px 0 0; font-size: 10.5px; color: var(--text-muted); }
+.source-meta { display: flex; align-items: center; gap: 7px; margin-top: 6px; font-size: 11px; color: var(--text-muted); flex-wrap: wrap; }
+.source-meta .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 10.5px; overflow-wrap: anywhere; }
+.source-stats { display: flex; gap: 14px; margin-top: 6px; font-size: 11.5px; flex-wrap: wrap; }
+.source-card .caps { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
+.pill.cap { color: var(--text-muted); border-color: var(--panel-edge); font-weight: 500; letter-spacing: 0; text-transform: none; }
+.pill.src { color: var(--sensor); border-color: var(--sensor); }
+
+.status-pill {
+  font-size: 10px; font-weight: 700; letter-spacing: .05em;
+  padding: 2px 8px; border-radius: 999px; border: 1px solid;
+}
+.status-pill.live    { color: var(--ok);         border-color: var(--ok); }
+.status-pill.stale   { color: var(--warn);       border-color: var(--warn); }
+.status-pill.offline { color: var(--bad);        border-color: var(--bad); }
+.status-pill.unknown { color: var(--text-muted); border-color: var(--panel-edge); }
+
+/* Payload counts */
+.payload-grid { display: flex; flex-wrap: wrap; gap: 12px 18px; margin-top: 8px; }
+.payload-grid .count { font-size: 22px; }
+.count.aircraft  { color: var(--aircraft); }
+.count.drones    { color: var(--sapient); }
+.count.operators { color: var(--operator); }
+.count.sensors   { color: var(--sensor); }
+.count.stale     { color: var(--text-muted); }
+
+/* Filters */
+.filter-group { margin-top: 10px; }
+.filter-group h3 { margin: 0 0 4px; font-size: 10px; font-weight: 700; letter-spacing: .08em; color: var(--text-muted); }
+.filter-group label { display: flex; align-items: center; gap: 7px; font-size: 12px; padding: 2px 0; cursor: pointer; }
+.filter-group input[type="checkbox"] { accent-color: var(--sapient); }
+
+/* Sensor marker (ported from cmd/sapient-explorer) */
+.marker.sapient-sensor .shape {
+  position: absolute; left: 50%; top: 50%;
+  width: 13px; height: 13px; margin: -6.5px 0 0 -6.5px; border-radius: 2px;
+  background: transparent; border: 2px solid var(--sensor);
+  box-shadow: 0 0 0 1.5px rgba(11, 18, 32, .75), 0 0 6px var(--sensor);
+}
+.marker.sapient-sensor .shape::after {
+  content: ""; position: absolute; inset: 3px;
+  border-radius: 50%; background: var(--sensor);
+}
+.marker.sapient-sensor.estimated .shape { border-style: dashed; box-shadow: none; opacity: .8; }
+.marker.sapient-sensor.estimated .shape::after { background: transparent; }
+.mini.sensor { border: 2px solid var(--sensor); border-radius: 2px; }
+.mini.stale-demo { border-radius: 50%; background: var(--sapient); opacity: .35; filter: grayscale(.8); }
+
+/* Stale fade + selected ring + update pulse (live markers stay full-contrast;
+   only stale ones fade) */
+.marker.stale { opacity: .45; filter: grayscale(.8); }
+.marker.selected::after {
+  content: ""; position: absolute; inset: -1px; border-radius: 50%;
+  border: 2px solid #fff; box-shadow: 0 0 8px rgba(255,255,255,.8), inset 0 0 6px rgba(11,18,32,.35);
+  pointer-events: none;
+}
+.marker.sapient-sensor.selected::after { border-radius: 5px; }
+@keyframes marker-pulse {
+  0%   { filter: drop-shadow(0 0 0 rgba(45, 212, 191, .9)); }
+  60%  { filter: drop-shadow(0 0 10px rgba(45, 212, 191, .55)); }
+  100% { filter: drop-shadow(0 0 0 rgba(45, 212, 191, 0)); }
+}
+.marker.pulse { animation: marker-pulse .9s ease-out 1; }
+
+/* Detail drawer (replaces Leaflet popups; reuses .popup row/sect styles) */
+#drawer {
+  position: absolute; top: 12px; right: 12px; bottom: 24px; width: 340px;
+  z-index: 900; overflow-y: auto;
+  background: var(--panel); border: 1px solid var(--panel-edge);
+  border-radius: 12px; padding: 14px; box-shadow: 0 8px 30px rgba(0,0,0,.45);
+  font-size: 12px;
+}
+#drawer.hidden { display: none; }
+#drawerClose {
+  position: absolute; top: 8px; right: 10px; background: none; border: none;
+  color: var(--text-muted); font-size: 18px; cursor: pointer; line-height: 1;
+}
+#drawerClose:hover { color: var(--text); }
+#drawer .pop-head {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  font-weight: 700; margin: 0 14px 6px 0; flex-wrap: wrap;
+}
+#drawer .pop-head .id { font-family: ui-monospace, Menlo, monospace; font-size: 13px; }
+#drawer .sect {
+  margin-top: 9px; padding-top: 7px; border-top: 1px dashed var(--panel-edge);
+  font-size: 10px; font-weight: 700; letter-spacing: .06em; color: var(--text-muted);
+}
+#drawer .row { display: flex; justify-content: space-between; gap: 12px; font-size: 12px; margin: 2px 0; }
+#drawer .row .k { color: var(--text-muted); }
+#drawer .row .v { overflow-wrap: anywhere; text-align: right; }
+#drawer .row .v.mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11px; }

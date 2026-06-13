@@ -1,0 +1,6 @@
+# Foundry build artifacts
+out/
+cache/
+
+# Dependencies (managed by forge install)
+lib/

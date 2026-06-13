@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Neuron 012 — Browser Client Profile demo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body {
+      font: 14px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      margin: 2rem auto;
+      max-width: 920px;
+      padding: 0 1rem;
+      color: #222;
+    }
+    header { margin-bottom: 1rem; }
+    header h1 { margin: 0 0 0.25rem 0; }
+    header p { color: #666; margin: 0; }
+    button#buy {
+      font: inherit;
+      padding: 0.65rem 1.2rem;
+      cursor: pointer;
+      border: 1px solid #2e7d32;
+      background: #e8f5e9;
+      border-radius: 4px;
+      margin: 0.75rem 0;
+    }
+    button#buy:disabled { opacity: 0.5; cursor: default; }
+    section { margin-top: 1.25rem; }
+    h2 { font-size: 1rem; margin: 0 0 0.5rem 0; text-transform: uppercase; color: #555; letter-spacing: 0.05em; }
+    #status, #ledger, #image {
+      border: 1px solid #ddd;
+      background: #fafafa;
+      padding: 0.75rem;
+      border-radius: 4px;
+    }
+    #status { min-height: 2rem; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12.5px; }
+    #ledger { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12.5px; }
+    #ledger ul { list-style: none; padding: 0; margin: 0; }
+    #ledger li { padding: 0.25rem 0; border-bottom: 1px solid #eee; }
+    #ledger li:last-child { border-bottom: none; }
+    #image img { max-width: 100%; height: auto; display: block; margin: 0 auto; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Neuron 012 — Browser Client Profile</h1>
+    <p>Click <strong>Buy</strong> to run the full browser-to-server Neuron transaction. Signed envelopes + SHA-256 verified end-to-end in this tab.</p>
+  </header>
+
+  <button id="buy" type="button">Buy</button>
+
+  <section>
+    <h2>Status</h2>
+    <div id="status">Ready. (Click Buy to start a session.)</div>
+  </section>
+
+  <section>
+    <h2>Signature-chain ledger</h2>
+    <div id="ledger"><ul></ul></div>
+  </section>
+
+  <section>
+    <h2>Received image</h2>
+    <div id="image"></div>
+  </section>
+
+  <script type="module" src="./main.ts"></script>
+</body>
+</html>

@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Neuron Agent Explorer — SAPIENT tactical SA</title>
+
+  <!-- Leaflet 1.9.4 from unpkg (single-page, no build tooling). -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+          integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+  <link rel="stylesheet" href="/app.css" />
+</head>
+<body>
+
+<header id="chrome" role="banner">
+  <div class="brand">
+    <h1>◈ Neuron Agent Explorer</h1>
+    <p class="tagline">SAPIENT tactical situational awareness · local demo</p>
+  </div>
+  <nav id="tabs" role="tablist" aria-label="views">
+    <button class="tab active" data-view="map" role="tab" aria-selected="true">Tactical Map</button>
+    <button class="tab" data-view="registry" role="tab" aria-selected="false">Agent Registry</button>
+  </nav>
+  <div class="chrome-actions">
+    <button id="tourBtn" class="tour-btn" type="button" title="Guided tour — how this works">❔ How this works</button>
+    <span class="badge" id="fidBadge" data-state="idle" title="live map feed (sapient-fid-display)">feed —</span>
+    <span class="badge" id="connBadge" data-state="connecting">connecting</span>
+  </div>
+</header>
+
+<div id="stage">
+
+  <!-- ─── Shared collapsible sidebar: agent roster + live counts ─── -->
+  <aside id="sidebar" role="complementary" aria-label="agents">
+    <button id="sidebarToggle" title="collapse sidebar" aria-label="collapse sidebar">«</button>
+    <div class="side-inner">
+      <input id="agentSearch" type="search" placeholder="search agents (id / EVM / node_id)…" aria-label="search agents" />
+      <div class="side-section-title">AGENTS <span id="agentCount" class="muted">0</span></div>
+      <div id="agentList" role="list"><!-- JS --></div>
+
+      <div class="side-section-title">LIVE</div>
+      <div id="counts" class="counts">
+        <div><span class="count tracks" id="cTracks">0</span><span class="count-label">tracks</span></div>
+        <div><span class="count tracks" id="cAircraft">0</span><span class="count-label">aircraft</span></div>
+        <div><span class="count tracks" id="cDrones">0</span><span class="count-label">drones</span></div>
+        <div><span class="count operators" id="cOperators">0</span><span class="count-label">operators</span></div>
+      </div>
+      <div class="freshness" id="freshness" data-state="idle"><span class="dot"></span><span class="age">no data</span></div>
+
+      <div class="side-section-title">SOURCES</div>
+      <div id="sourcesMini"><p class="muted" style="font-size:11px">no source data from display</p></div>
+    </div>
+  </aside>
+
+  <!-- ─── View 1: Tactical Map ─── -->
+  <section id="view-map" class="view active" role="tabpanel" aria-label="Tactical Map">
+    <div id="map" role="application" aria-label="SAPIENT track map"></div>
+
+    <div id="offlineBanner" class="offline hidden" role="status">
+      ⚠ live map offline — start <code>sapient-fid-display</code>. The Agent Registry still works.
+    </div>
+
+    <div id="filters" class="glass" role="region" aria-label="filters">
+      <div class="filters-title">FILTERS</div>
+      <label><input type="checkbox" data-filter="drones" checked /> <span class="sw drone"></span> tracks (drones + aircraft)</label>
+      <label><input type="checkbox" data-filter="operators" checked /> <span class="sw operator"></span> operators</label>
+      <label><input type="checkbox" data-filter="stale" checked /> stale tracks</label>
+      <label><input type="checkbox" data-filter="friendly" checked /> friendly · demo</label>
+      <label><input type="checkbox" data-filter="sim" checked /> SIM</label>
+      <label><input type="checkbox" data-filter="onchain" checked /> on-chain</label>
+      <label><input type="checkbox" data-filter="sensors" checked /> <span class="sw sensor"></span> sensors</label>
+    </div>
+
+    <div id="legend" class="glass" role="region" aria-label="legend">
+      <div class="row"><span class="sym"><span class="mini drone"></span></span>RID drone track</div>
+      <div class="row"><span class="sym"><span class="mini aircraft"></span></span>ADS-B aircraft</div>
+      <div class="row"><span class="sym"><span class="mini operator"></span></span>operator / pilot</div>
+      <div class="row"><span class="sym"><span class="mini sensor"></span></span>sensor / receiver</div>
+      <div class="row"><span class="sym"><span class="mini stale-demo"></span></span>faded = stale</div>
+    </div>
+
+    <aside id="drawer" class="glass drawer hidden" role="region" aria-label="selected object">
+      <button class="drawer-close" id="drawerClose" aria-label="close">×</button>
+      <div id="drawerBody"></div>
+    </aside>
+  </section>
+
+  <!-- ─── View 2: Agent Registry / Evidence ─── -->
+  <!-- Two-pane master/detail: the agent list (left) stays reachable while the
+       selected agent's card scrolls independently (right). On narrow screens it
+       collapses to a list/detail toggle with a "← Back to agents" control. -->
+  <section id="view-registry" class="view" role="tabpanel" aria-label="Agent Registry">
+    <div id="registryWrap">
+      <div id="registryHead">
+        <nav id="registryCrumb" aria-label="breadcrumb">
+          <button class="crumb-root" id="crumbRoot" type="button" title="Back to the agent list">Agent Registry</button><span class="crumb-sep hidden" id="crumbSep">/</span><span class="crumb-current" id="crumbCurrent"></span>
+        </nav>
+        <p class="muted" id="evidenceDirNote">—</p>
+      </div>
+      <div id="registrySplit">
+        <div id="registryListPane">
+          <div id="registryTableWrap">
+            <table id="registryTable">
+              <thead>
+                <tr><th>AGENT ID</th><th>SELLER EVM</th><th>PEER ID</th><th>NODE ID</th><th>SVC</th><th>PROTOCOL</th><th>PROV</th>
+            <th>LIVE</th></tr>
+              </thead>
+              <tbody id="registryBody"><!-- JS --></tbody>
+            </table>
+            <div id="registryEmpty" class="empty hidden"></div>
+          </div>
+        </div>
+        <div id="registryDetailPane">
+          <button id="backToAgents" type="button">← Back to agents</button>
+          <div id="agentDetail" class="glass"><p class="muted">Select an agent to inspect its Agent Card.</p></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<footer id="honesty" role="contentinfo">
+  display is a <strong class="proj">projection</strong> · canonical wire = <strong class="wirelbl">SAPIENT protobuf (BSI Flex 335 v2.0)</strong>
+  · <strong class="frlbl">FRIENDLY</strong> = demo CoT profile · <strong class="simlbl">SIM</strong> = in-memory EIP-8004 registry · live tracks proxied read-only from :8193
+</footer>
+
+<!-- Guided onboarding overlay (welcome card + spotlight tour). Rendered into by
+     app.js; hidden until first run or the "How this works" button. -->
+<div id="onboard" class="onboard hidden" role="dialog" aria-modal="true"
+     aria-hidden="true" aria-label="Neuron Agent Explorer — guided tour"></div>
+
+<!-- logic.js is the shared pure-logic module, byte-identical to
+     cmd/sapient-fid-display/static/logic.js (pinned by a Go test) so the two
+     UIs can never render the same payload differently. -->
+<script src="/logic.js"></script>
+<script src="/app.js" defer></script>
+</body>
+</html>

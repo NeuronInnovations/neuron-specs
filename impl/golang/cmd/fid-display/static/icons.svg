@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none">
+  <!-- Drone (RID): simple quadcopter top-down silhouette.
+       Used in legend; map markers use the .marker.drone .shape CSS shape. -->
+  <symbol id="drone" viewBox="0 0 18 18">
+    <g fill="currentColor">
+      <circle cx="9" cy="9" r="3"/>
+      <circle cx="2.5" cy="2.5" r="2"/>
+      <circle cx="15.5" cy="2.5" r="2"/>
+      <circle cx="2.5" cy="15.5" r="2"/>
+      <circle cx="15.5" cy="15.5" r="2"/>
+      <line x1="4" y1="4" x2="14" y2="14" stroke="currentColor" stroke-width="1.2"/>
+      <line x1="14" y1="4" x2="4" y2="14" stroke="currentColor" stroke-width="1.2"/>
+    </g>
+  </symbol>
+
+  <!-- Aircraft (ADS-B real / normalized-track): top-down jet silhouette.
+       Rotated by headingDeg in app.js. -->
+  <symbol id="aircraft" viewBox="0 0 18 18">
+    <path fill="currentColor" d="M9 1 L10 7 L17 9 L17 11 L10 10 L10 14 L12 15.5 L12 16.5 L9 16 L6 16.5 L6 15.5 L8 14 L8 10 L1 11 L1 9 L8 7 Z"/>
+  </symbol>
+
+  <!-- Operator (pilot): diamond with a small dot to evoke a stationary
+       ground operator. -->
+  <symbol id="operator" viewBox="0 0 18 18">
+    <g fill="currentColor">
+      <path d="M9 2 L16 9 L9 16 L2 9 Z" opacity="0.85"/>
+      <circle cx="9" cy="9" r="2" fill="#11151c"/>
+    </g>
+  </symbol>
+</svg>

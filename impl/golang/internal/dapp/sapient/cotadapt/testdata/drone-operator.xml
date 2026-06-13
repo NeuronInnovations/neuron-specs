@@ -1,0 +1,15 @@
+<event version="2.0" uid="1581F8B1234567890ABC" type="a-u-A" time="2025-12-02T09:39:25.000Z" start="2025-12-02T09:39:25.000Z" stale="2025-12-02T09:39:30.000Z" how="m-g">
+  <point lat="50.1027" lon="-5.6634" hae="95" ce="3" le="10"></point>
+  <detail>
+    <contact callsign="1581F8B1234567890ABC"></contact>
+    <remarks>class=UAV confidence=0.99</remarks>
+  </detail>
+</event>
+<event version="2.0" uid="1581F8B1234567890ABC-OP" type="a-u-G" time="2025-12-02T09:39:25.000Z" start="2025-12-02T09:39:25.000Z" stale="2025-12-02T09:39:30.000Z" how="m-g">
+  <point lat="50.1027" lon="-5.6705" hae="0" ce="9999999" le="9999999"></point>
+  <detail>
+    <contact callsign="OP-NEURON-TEST-001"></contact>
+    <link relation="p-p" uid="1581F8B1234567890ABC" type="a-u-A"></link>
+    <remarks>operator (display projection; not a SAPIENT DetectionReport)</remarks>
+  </detail>
+</event>

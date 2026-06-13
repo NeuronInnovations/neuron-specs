@@ -1,0 +1,130 @@
+# ---------------------------------------------------------------------------
+# OS
+# ---------------------------------------------------------------------------
+.DS_Store
+._*
+.AppleDouble
+.LSOverride
+Thumbs.db
+desktop.ini
+*~
+
+# ---------------------------------------------------------------------------
+# Editors / IDEs
+# ---------------------------------------------------------------------------
+.vscode/
+!.vscode/extensions.json
+!.vscode/tasks.json
+.idea/
+*.swp
+*.swo
+*.sublime-workspace
+*.sublime-project
+
+# ---------------------------------------------------------------------------
+# Secrets / environment — NEVER commit
+# ---------------------------------------------------------------------------
+.env
+.env.*
+!.env.example
+!.env.*.example
+*.pem
+*.key
+id_rsa
+id_ed25519
+
+# ---------------------------------------------------------------------------
+# Node / TypeScript
+# ---------------------------------------------------------------------------
+node_modules/
+dist/
+build/
+*.tsbuildinfo
+.cache/
+.vite/
+.parcel-cache/
+
+# lockfiles — keep pnpm-lock.yaml tracked (reproducible installs); the repo
+# is pnpm-managed now, so the stale npm package-lock.json can be removed.
+package-lock.json
+
+# logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# ---------------------------------------------------------------------------
+# Playwright (H4 automation harness + Spec 012 T033/T034 evidence run)
+# ---------------------------------------------------------------------------
+test-results/
+playwright-report/
+playwright/.cache/
+/blob-report/
+
+# ---------------------------------------------------------------------------
+# Foundry / Solidity (contracts/)
+# ---------------------------------------------------------------------------
+contracts/cache/
+contracts/out/
+contracts/lib/
+contracts/broadcast/*/dry-run/
+# Keep committed deploy records under contracts/broadcast/<script>/<chainId>/run-*.json
+# so reviewers can audit on-chain history; block only the dry-run subdirs.
+
+# ---------------------------------------------------------------------------
+# Go — binaries + coverage
+# ---------------------------------------------------------------------------
+/bin/
+*.exe
+*.test
+*.out
+coverage.txt
+coverage.html
+*.prof
+
+# Compiled command binaries built at the Go module root (extensionless;
+# rebuild with `go build ./cmd/<name>`). These must never be tracked — a
+# committed binary embeds the builder's local filesystem paths.
+/impl/golang/adsb-seller
+/impl/golang/buyer-seller-demo
+/impl/golang/delivery-demo
+/impl/golang/edge-seller
+/impl/golang/edge-validator
+/impl/golang/fid-display
+/impl/golang/hcs-heartbeat-test
+/impl/golang/multistream-buyer
+/impl/golang/remoteid-seller
+/impl/golang/sapient-buyer
+/impl/golang/sapient-rid-seller
+
+# ---------------------------------------------------------------------------
+# Spec 012 demo runtime artifacts (also covered by nested .gitignore
+# files under the relevant directories; listed here for visibility)
+# ---------------------------------------------------------------------------
+impl/typescript/examples/browser-demo/public/bootstrap.json
+impl/typescript/tests/smoke/public/smoke-addr.txt
+
+# ---------------------------------------------------------------------------
+# AI tooling — per-user session state, not team artefacts
+# ---------------------------------------------------------------------------
+.claude/settings.local.json
+.claude/projects/
+.serena/cache/
+
+# Keep tracked (committed team infrastructure — do NOT add to ignore):
+#   .claude/commands/*          (Spec Kit slash command definitions)
+#   .specify/**                 (Spec Kit templates + scripts + constitution)
+#   .serena/memories/*.md       (Serena project context, team-shared)
+#   .serena/project.yml
+#   .serena/.gitignore          (Serena's own nested ignore)
+
+# ---------------------------------------------------------------------------
+# Project-specific
+# ---------------------------------------------------------------------------
+docs/demo-assets/
+# Local Markdown render artifacts (Marked/Pandoc/etc.) — keep the .md sources
+# tracked, never the rendered HTML side-products.
+docs/tevv/*.html
+.sem/

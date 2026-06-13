@@ -1,0 +1,47 @@
+[
+  {
+    "offsetMs": 0,
+    "type": "remote-id-frame",
+    "version": "1.0.0",
+    "source": "dronescout-ds400",
+    "droneId": "MFR1234567890ABC",
+    "droneIdType": "serial",
+    "position": {"lat": 51.4775, "lon": -0.4614, "alt": 100.0, "fix": "3D"},
+    "velocity": {"speedHorizontal": 25.0, "speedVertical": 0.0, "track": 90.0},
+    "regulatorVariant": "asd-faa"
+  },
+  {
+    "offsetMs": 1000,
+    "type": "remote-id-frame",
+    "version": "1.0.0",
+    "source": "dronescout-ds400",
+    "droneId": "MFR1234567890ABC",
+    "droneIdType": "serial",
+    "position": {"lat": 51.4776, "lon": -0.4612, "alt": 100.0, "fix": "3D"},
+    "velocity": {"speedHorizontal": 25.0, "speedVertical": 0.0, "track": 90.0},
+    "regulatorVariant": "asd-faa"
+  },
+  {
+    "offsetMs": 1500,
+    "type": "remote-id-frame",
+    "version": "1.0.0",
+    "source": "dronescout-ds400",
+    "droneId": "MFR2222333344445",
+    "droneIdType": "serial",
+    "position": {"lat": 51.4770, "lon": -0.4620, "alt": 80.0, "fix": "3D"},
+    "velocity": {"speedHorizontal": 15.0, "speedVertical": 1.0, "track": 270.0},
+    "operator": {"idType": "caa", "id": "OP-GB-001"},
+    "regulatorVariant": "asd-easa"
+  },
+  {
+    "offsetMs": 2000,
+    "type": "remote-id-frame",
+    "version": "1.0.0",
+    "source": "dronescout-ds400",
+    "droneId": "MFR1234567890ABC",
+    "droneIdType": "serial",
+    "position": {"lat": 51.4777, "lon": -0.4610, "alt": 100.0, "fix": "3D"},
+    "velocity": {"speedHorizontal": 25.0, "speedVertical": 0.0, "track": 90.0},
+    "regulatorVariant": "asd-faa"
+  }
+]

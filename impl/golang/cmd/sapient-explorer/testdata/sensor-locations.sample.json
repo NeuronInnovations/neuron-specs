@@ -1,0 +1,22 @@
+[
+  {
+    "sensorId": "ds220500000100",
+    "agentId": "1",
+    "label": "Land's End RID Receiver (SAMPLE — not a real site)",
+    "lat": 50.1027,
+    "lon": -5.6705,
+    "altM": 30,
+    "source": "configured",
+    "confidence": "exact",
+    "lastUpdated": "2026-06-08T00:00:00Z"
+  },
+  {
+    "sensorId": "ds220500000200",
+    "label": "Secondary receiver (SAMPLE, estimated position)",
+    "lat": 50.0900,
+    "lon": -5.6400,
+    "source": "estimated",
+    "confidence": "approx ±500m",
+    "lastUpdated": "2026-06-08T00:00:00Z"
+  }
+]

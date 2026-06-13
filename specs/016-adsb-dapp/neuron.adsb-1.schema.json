@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://neuron.world/schemas/neuron.adsb-1.schema.json",
+  "title": "Neuron ADS-B/JetVision SAPIENT Extension",
+  "description": "Machine-readable form of EXTENSION.md (neuron.adsb/1). Validates the non-standard parts of a neuron-jv-bridge SAPIENT DetectionReport: the adsb.* objectInfo namespace carrying the JetVision aircraftlist.json payload that has no native SAPIENT slot. Apply ALONGSIDE the SAPIENT DetectionReport schema — native fields (object_id ULID, location, enu_velocity, classification, signal, id) are intentionally left unconstrained here.",
+  "x-schema-id": "neuron.adsb/1",
+  "x-version": "1.0.0",
+  "type": "object",
+  "properties": {
+    "objectInfo": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/objectInfoEntry" }
+    }
+  },
+  "$defs": {
+    "objectInfoEntry": {
+      "type": "object",
+      "required": ["type", "value"],
+      "properties": {
+        "type": { "type": "string" },
+        "value": { "type": "string" },
+        "units": { "type": "string" }
+      },
+      "additionalProperties": false,
+      "allOf": [
+        { "if": { "required": ["type"], "properties": { "type": { "pattern": "^adsb\\." } } },
+          "then": { "properties": { "type": { "$ref": "#/$defs/adsbKey" } } } },
+        { "if": { "required": ["type"], "properties": { "type": { "const": "adsb.source" } } },
+          "then": { "properties": { "value": { "enum": ["A", "M", "L", "F", "O", "S", "D", "?"] } } } },
+        { "if": { "required": ["type"], "properties": { "type": { "const": "adsb.provenance" } } },
+          "then": { "properties": { "value": { "enum": ["local", "network", "relayed", "unknown"] } } } },
+        { "if": { "required": ["type"], "properties": { "type": { "const": "adsb.airGround" } } },
+          "then": { "properties": { "value": { "enum": ["airborne", "ground", "unknown"] } } } },
+        { "if": { "required": ["type"], "properties": { "type": { "const": "adsb.emergency" } } },
+          "then": { "properties": { "value": { "enum": ["hijack", "radioFailure", "general"] } } } },
+        { "if": { "required": ["type"], "properties": { "type": { "enum": ["adsb.spi", "adsb.autopilotEngaged", "adsb.airGroundTisB"] } } },
+          "then": { "properties": { "value": { "enum": ["true", "false"] } } } },
+        { "if": { "required": ["type"], "properties": { "type": { "enum": [
+              "adsb.subclass", "adsb.baroAltFt", "adsb.geoAltFt", "adsb.alert", "adsb.tcasMode",
+              "adsb.nacp", "adsb.sil", "adsb.sda", "adsb.pic", "adsb.mopsVersion", "adsb.trustCount",
+              "adsb.posAgeProxy", "adsb.signalDbm",
+              "adsb.groundSpeedKt", "adsb.trackDeg", "adsb.verticalRateFpm",
+              "adsb.selectedAltFt", "adsb.selectedHeadingDeg",
+              "adsb.qnhHpa", "adsb.oatC", "adsb.windSpeedKt", "adsb.windDirDeg",
+              "adsb.mlatPest", "adsb.mlatNoclients"
+            ] } } },
+          "then": { "properties": { "value": { "$ref": "#/$defs/numericString" } } } }
+      ]
+    },
+    "adsbKey": {
+      "description": "Every adsb.* objectInfo type emitted by neuron-jv-bridge.",
+      "enum": [
+        "adsb.icao24", "adsb.source", "adsb.provenance", "adsb.availability", "adsb.subclass",
+        "adsb.callsign", "adsb.registration", "adsb.typeCode", "adsb.operator",
+        "adsb.originIcao", "adsb.destIcao", "adsb.country", "adsb.countryIso",
+        "adsb.emitterCategory",
+        "adsb.baroAltFt", "adsb.geoAltFt", "adsb.airGround", "adsb.airGroundTisB",
+        "adsb.squawk", "adsb.emergency", "adsb.alert", "adsb.spi", "adsb.tcasMode", "adsb.autopilotEngaged",
+        "adsb.nacp", "adsb.sil", "adsb.sda", "adsb.pic", "adsb.mopsVersion", "adsb.trustCount", "adsb.posAgeProxy", "adsb.signalDbm",
+        "adsb.groundSpeedKt", "adsb.trackDeg", "adsb.verticalRateFpm",
+        "adsb.selectedAltFt", "adsb.selectedHeadingDeg", "adsb.qnhHpa",
+        "adsb.oatC", "adsb.windSpeedKt", "adsb.windDirDeg",
+        "adsb.mlatPest", "adsb.mlatNoclients"
+      ]
+    },
+    "numericString": {
+      "type": "string",
+      "pattern": "^-?[0-9]+(\\.[0-9]+)?([eE][-+]?[0-9]+)?$"
+    }
+  }
+}

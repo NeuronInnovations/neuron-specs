@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Neuron 012 2a-wt — WebTransport direct spike</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body {
+      font: 14px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      margin: 2rem auto;
+      max-width: 920px;
+      padding: 0 1rem;
+      color: #222;
+    }
+    header { margin-bottom: 1rem; }
+    header h1 { margin: 0 0 0.25rem 0; }
+    header p { color: #666; margin: 0; }
+    .banner {
+      background: #fff3e0;
+      border: 1px solid #e65100;
+      color: #bf360c;
+      padding: 0.5rem 0.75rem;
+      border-radius: 4px;
+      font-size: 12.5px;
+      margin: 0.5rem 0 1rem 0;
+    }
+    .buttons { display: flex; gap: 0.5rem; flex-wrap: wrap; margin: 0.75rem 0; }
+    button#ping, button#buy {
+      font: inherit;
+      padding: 0.65rem 1.2rem;
+      cursor: pointer;
+      border: 1px solid #1565c0;
+      background: #e3f2fd;
+      border-radius: 4px;
+    }
+    button#buy { border-color: #2e7d32; background: #e8f5e9; }
+    button#ping:disabled, button#buy:disabled { opacity: 0.5; cursor: default; }
+    section { margin-top: 1.25rem; }
+    h2 { font-size: 1rem; margin: 0 0 0.5rem 0; text-transform: uppercase; color: #555; letter-spacing: 0.05em; }
+    #status, #ledger, #image {
+      border: 1px solid #ddd;
+      background: #fafafa;
+      padding: 0.75rem;
+      border-radius: 4px;
+    }
+    #status { min-height: 2rem; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12.5px; }
+    #ledger { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12.5px; }
+    #ledger ul { list-style: none; padding: 0; margin: 0; }
+    #ledger li { padding: 0.25rem 0; border-bottom: 1px solid #eee; }
+    #ledger li:last-child { border-bottom: none; }
+    #image img { max-width: 100%; height: auto; display: block; margin: 0 auto; }
+    #image:empty::before { content: '(no image yet)'; color: #999; font-style: italic; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Neuron 012 2a-wt — WebTransport direct spike</h1>
+    <p><strong>Ping</strong> dials the seller over libp2p WebTransport and runs an echo round-trip (Tier A). <strong>Buy</strong> runs the full 4-message browser-profile flow and renders the received JPEG after SHA-256 verification (Tier B).</p>
+    <div class="banner">v2a feasibility experiment — <strong>NOT</strong> part of spec 012 v1. Tier 1 (WSS + SSH tunnel) remains the compliant browser profile for v1. See <code>docs/vps-webtransport-runbook.md</code>.</div>
+  </header>
+
+  <div class="buttons">
+    <button id="ping" type="button">Ping</button>
+    <button id="buy" type="button">Buy</button>
+  </div>
+
+  <section>
+    <h2>Status</h2>
+    <div id="status">Ready. (Click Ping or Buy.)</div>
+  </section>
+
+  <section>
+    <h2>Trace</h2>
+    <div id="ledger"><ul></ul></div>
+  </section>
+
+  <section>
+    <h2>Received asset</h2>
+    <div id="image"></div>
+  </section>
+
+  <script type="module" src="./main.ts"></script>
+</body>
+</html>

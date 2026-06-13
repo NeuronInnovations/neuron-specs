@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Neuron FID — hybrid live + synthetic sensor-fusion demonstrator</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+
+  <!-- Leaflet 1.9.4 from unpkg (single-page, no build tooling). -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+          integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+  <link rel="stylesheet" href="/app.css" />
+</head>
+<body>
+
+<header id="chrome" role="banner">
+  <div class="brand">
+    <svg class="logo" viewBox="0 0 32 32" aria-hidden="true">
+      <use href="/logo.svg#mark"></use>
+    </svg>
+    <div class="brand-text">
+      <h1>Neuron FID</h1>
+      <p class="tagline">Hybrid live + synthetic sensor-fusion demonstrator</p>
+    </div>
+  </div>
+
+  <!-- Phase 3 will inject the 2-sellers → buyer → FID SVG widget here. -->
+  <div class="topology-slot" id="topology-slot" aria-hidden="true"></div>
+
+  <div class="chrome-actions">
+    <button type="button" id="resetView" title="Reset map view to default bounds">Reset view</button>
+    <span class="badge" id="connBadge" data-state="connecting">connecting</span>
+  </div>
+</header>
+
+<div id="stage">
+  <!-- ─── Status rail ─────────────────────────────────────────── -->
+  <aside id="rail" role="complementary" aria-label="Source status">
+
+    <!-- Source A — ADS-B real (normalizedTracks) -->
+    <section class="card" id="card-source-a" aria-label="Source A: JetVision London ADS-B">
+      <h2><span class="swatch real"></span>Source A · ADS-B</h2>
+      <p class="subtitle">JetVision Air!Squitter · London (real Mode-S)</p>
+      <div class="metric-row">
+        <span class="count">0</span>
+        <span class="count-label">aircraft</span>
+      </div>
+      <div class="freshness" data-state="idle">
+        <span class="dot"></span><span class="age">no data</span>
+      </div>
+      <div class="seller">seller: —</div>
+    </section>
+
+    <!-- Source B — RID synthetic (drones + operators) -->
+    <section class="card" id="card-source-b" aria-label="Source B: DroneScout DS240 synthetic Remote ID">
+      <h2><span class="swatch synthetic"></span>Source B · Remote ID</h2>
+      <p class="subtitle">DroneScout DS240 emulator · synthetic (frameSource=synthetic)</p>
+      <div class="metric-row">
+        <div>
+          <span class="count drones">0</span>
+          <span class="count-label">drones</span>
+        </div>
+        <div>
+          <span class="count pilots">0</span>
+          <span class="count-label">pilots</span>
+        </div>
+      </div>
+      <div class="freshness" data-state="idle">
+        <span class="dot"></span><span class="age">no data</span>
+      </div>
+      <div class="seller">seller: —</div>
+    </section>
+
+    <!-- PASS gate — verbatim demo-check.sh rule -->
+    <section class="card" id="card-pass" data-state="idle" aria-label="PASS gate">
+      <h2>PASS gate</h2>
+      <p class="subtitle">drones &ge; 1 &and; operators &ge; 1 &and; normalizedTracks &ge; 1</p>
+      <div class="metric-row">
+        <span class="count verdict">NO DATA</span>
+      </div>
+      <div class="freshness" data-state="idle">
+        <span class="dot"></span><span class="detail age">awaiting data</span>
+      </div>
+    </section>
+
+    <!-- Legacy bucket — small, expected zero -->
+    <section class="card compact legacy" id="card-legacy" aria-label="Legacy aircraft bucket">
+      <h2>Legacy bucket</h2>
+      <p class="subtitle">aircraft[] — expected empty in PASS state</p>
+      <div class="metric-row">
+        <span class="count muted">0</span>
+        <span class="count-label">placeholder</span>
+      </div>
+    </section>
+
+    <!-- Region jump (bottom of rail) -->
+    <div class="region-jump" role="group" aria-label="Region jump">
+      <button type="button" id="jumpLondon"
+              title="Pan to London ADS-B cluster (real aircraft)">
+        <span class="pin real"></span>London (ADS-B)
+      </button>
+      <button type="button" id="jumpLandsEnd"
+              title="Pan to Land's End synthetic RID orbit">
+        <span class="pin synthetic"></span>Land's End (synthetic)
+      </button>
+    </div>
+  </aside>
+
+  <!-- ─── Map + floating legend ───────────────────────────────── -->
+  <div id="map" role="application" aria-label="Sensor-fusion map"></div>
+
+  <div id="legend" role="region" aria-label="Marker legend">
+    <div class="group">
+      <div class="group-title">Real</div>
+      <div class="row">
+        <span class="sym"><svg width="14" height="14" viewBox="0 0 18 18"
+          aria-hidden="true"><use class="real" href="/icons.svg#aircraft"></use></svg></span>
+        ADS-B aircraft
+        <span class="pill real">REAL</span>
+      </div>
+    </div>
+    <div class="group">
+      <div class="group-title">Synthetic</div>
+      <div class="row">
+        <span class="sym"><svg width="14" height="14" viewBox="0 0 18 18"
+          aria-hidden="true"><use class="synthetic" href="/icons.svg#drone"></use></svg></span>
+        Remote ID drone
+        <span class="pill synthetic">SYN</span>
+      </div>
+      <div class="row">
+        <span class="sym"><svg width="14" height="14" viewBox="0 0 18 18"
+          aria-hidden="true"><use class="operator" href="/icons.svg#operator"></use></svg></span>
+        Remote ID pilot
+        <span class="pill synthetic">SYN</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/app.js" defer></script>
+</body>
+</html>

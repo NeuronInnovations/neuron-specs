@@ -1,0 +1,59 @@
+{
+  "name": "@neuron-sdk/typescript",
+  "version": "0.1.0",
+  "description": "Neuron Protocol TypeScript SDK — derived from specs 001-007",
+  "type": "module",
+  "engines": {
+    "node": ">=20.12.0"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:conformance": "vitest run tests/conformance/",
+    "lint": "eslint src/ tests/",
+    "typecheck": "tsc --noEmit",
+    "smoke:server": "tsx tests/smoke/fixture-server.ts",
+    "smoke:browser": "vite --config tests/smoke/vite.config.ts",
+    "demo": "tsx scripts/run-demo.ts",
+    "demo:server": "tsx src/server-demo/index.ts",
+    "demo:browser": "vite --config examples/browser-demo/vite.config.ts",
+    "demo:wt": "tsx scripts/run-demo-wt.ts",
+    "demo:wt:browser": "vite --config examples/browser-demo-wt/vite.config.ts",
+    "demo:wt:fetch": "bash scripts/fetch-wt-bootstrap.sh"
+  },
+  "dependencies": {
+    "@chainsafe/libp2p-noise": "17.0.0",
+    "@chainsafe/libp2p-yamux": "8.0.1",
+    "@libp2p/crypto": "^5.1.17",
+    "@libp2p/identify": "4.1.2",
+    "@libp2p/interface": "^3.2.2",
+    "@libp2p/peer-id": "^6.0.8",
+    "@libp2p/webtransport": "6.0.20",
+    "@libp2p/websockets": "10.1.10",
+    "@multiformats/multiaddr": "13.0.1",
+    "@noble/ciphers": "^2.2.0",
+    "@noble/hashes": "^1.7.1",
+    "@noble/secp256k1": "^2.2.3",
+    "@scure/bip32": "^1.6.2",
+    "@scure/bip39": "^1.5.4",
+    "bs58": "^6.0.0",
+    "hash-wasm": "^4.12.0",
+    "it-pipe": "^3.0.1",
+    "libp2p": "3.2.2"
+  },
+  "devDependencies": {
+    "@types/node": "^25.5.0",
+    "@types/ws": "^8.18.1",
+    "@typescript-eslint/eslint-plugin": "^8.0.0",
+    "@typescript-eslint/parser": "^8.0.0",
+    "eslint": "^9.0.0",
+    "playwright": "^1.59.1",
+    "tsx": "^4.21.0",
+    "typescript": "^5.7.0",
+    "vite": "^5.4.21",
+    "vitest": "^3.0.0",
+    "ws": "^8.20.0"
+  },
+  "license": "MIT"
+}

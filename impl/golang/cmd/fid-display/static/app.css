@@ -1,0 +1,637 @@
+/* Neuron FID Display — Phase 1 stylesheet.
+ *
+ * Theme tokens (CSS custom properties) and component styles for the
+ * fid-display public demo UI. Loaded by index.html as a separate
+ * stylesheet so diffs stay local to presentation.
+ *
+ * Palette is LOCKED (per plan correction 2026-05-22):
+ *   --accent-real        = #38bdf8 (sky-400)     ADS-B real
+ *   --accent-synthetic   = #fbbf24 (amber-400)   RID drone
+ *   --accent-operator    = #f0abfc (fuchsia-300) RID pilot/operator
+ *   --accent-pass        = #4ade80 (green-400)   system-health only
+ *   --accent-warn        = #f87171 (red-400)     stale / error
+ *
+ * Green (#4ade80) is reserved exclusively for system-health indicators
+ * (connection badge, PASS-gate card, fresh-state dot). It is NEVER
+ * used on an entity marker — that was the source of today's visual
+ * collision between "drone exists" and "system is healthy".
+ */
+
+:root {
+  /* surfaces + text */
+  --bg:               #0b0e14;
+  --surface:          #11151c;
+  --surface-elevated: #1a1f29;
+  --surface-translucent: rgba(17, 21, 28, 0.92);
+  --border:           #252b36;
+  --border-soft:      #1d2330;
+  --text-primary:     #e6e9ef;
+  --text-muted:       #8a93a3;
+  --text-faint:       #5a6270;
+
+  /* locked entity palette */
+  --accent-real:      #38bdf8;
+  --accent-synthetic: #fbbf24;
+  --accent-operator:  #f0abfc;
+
+  /* system-health palette (reserved — never on entity markers) */
+  --accent-pass:      #4ade80;
+  --accent-pass-bg:   rgba(74, 222, 128, 0.14);
+  --accent-warn:      #f87171;
+  --accent-warn-bg:   rgba(248, 113, 113, 0.14);
+  --accent-amber:     #fbbf24;
+  --accent-amber-bg:  rgba(251, 191, 36, 0.14);
+
+  /* layout */
+  --chrome-h:         72px;
+  --rail-w:           320px;
+  --radius-sm:        4px;
+  --radius-md:        6px;
+  --radius-lg:        10px;
+  --shadow-md:        0 4px 12px rgba(0, 0, 0, 0.4);
+
+  /* type scale */
+  --font-stack:       -apple-system, BlinkMacSystemFont, "Segoe UI",
+                      Roboto, "Helvetica Neue", Arial, sans-serif;
+  --fs-xs:            11px;
+  --fs-sm:            12px;
+  --fs-md:            14px;
+  --fs-lg:            16px;
+  --fs-xl:            24px;
+}
+
+/* ─── Reset + base ─────────────────────────────────────────────── */
+
+html, body {
+  margin: 0; padding: 0;
+  height: 100%; width: 100%;
+  background: var(--bg);
+  color: var(--text-primary);
+  font-family: var(--font-stack);
+  font-size: var(--fs-md);
+  -webkit-font-smoothing: antialiased;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+}
+
+/* ─── App chrome (header) ──────────────────────────────────────── */
+
+#chrome {
+  height: var(--chrome-h);
+  padding: 10px 18px;
+  display: flex; align-items: center; gap: 24px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  position: relative; z-index: 1100;
+}
+
+#chrome .brand {
+  display: flex; align-items: center; gap: 12px;
+  min-width: 0;
+}
+#chrome .brand .logo {
+  width: 32px; height: 32px;
+  flex: 0 0 32px;
+  color: var(--accent-real);
+}
+#chrome .brand-text {
+  display: flex; flex-direction: column; min-width: 0;
+}
+#chrome .brand-text h1 {
+  margin: 0;
+  font-size: var(--fs-lg);
+  font-weight: 600;
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+}
+#chrome .brand-text .tagline {
+  margin: 2px 0 0;
+  font-size: var(--fs-sm);
+  color: var(--text-muted);
+  line-height: 1.2;
+}
+
+#chrome .topology-slot {
+  flex: 1 1 auto;
+  display: flex; justify-content: center;
+  /* Phase 3 will populate this with the 2-sellers → buyer → FID
+     SVG widget. Phase 1 leaves it visually empty but reserved. */
+  min-width: 0;
+}
+
+#chrome .chrome-actions {
+  display: flex; align-items: center; gap: 8px;
+}
+#chrome .chrome-actions button {
+  background: var(--surface-elevated);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+  padding: 6px 10px;
+  border-radius: var(--radius-sm);
+  font-size: var(--fs-sm);
+  display: inline-flex; align-items: center; gap: 6px;
+}
+#chrome .chrome-actions button:hover {
+  background: var(--border);
+  border-color: var(--text-faint);
+}
+#chrome .chrome-actions button:focus-visible {
+  outline: 2px solid var(--accent-real);
+  outline-offset: 2px;
+}
+
+/* ─── Connection badge (system-health green) ───────────────────── */
+
+.badge {
+  background: var(--surface-elevated);
+  color: var(--text-muted);
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  font-size: var(--fs-xs);
+  font-variant-numeric: tabular-nums;
+  border: 1px solid var(--border);
+  display: inline-flex; align-items: center; gap: 6px;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+.badge::before {
+  content: '';
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--text-faint);
+  flex: 0 0 7px;
+}
+.badge[data-state="live"] {
+  background: var(--accent-pass-bg);
+  color: var(--accent-pass);
+  border-color: rgba(74, 222, 128, 0.32);
+}
+.badge[data-state="live"]::before {
+  background: var(--accent-pass);
+  box-shadow: 0 0 0 2px rgba(74, 222, 128, 0.18);
+}
+.badge[data-state="reconnecting"] {
+  background: var(--accent-amber-bg);
+  color: var(--accent-amber);
+  border-color: rgba(251, 191, 36, 0.32);
+}
+.badge[data-state="reconnecting"]::before {
+  background: var(--accent-amber);
+}
+.badge[data-state="disconnected"] {
+  background: var(--accent-warn-bg);
+  color: var(--accent-warn);
+  border-color: rgba(248, 113, 113, 0.32);
+}
+.badge[data-state="disconnected"]::before {
+  background: var(--accent-warn);
+}
+
+/* ─── Stage layout (rail + map) ────────────────────────────────── */
+
+#stage {
+  position: relative;
+  height: calc(100vh - var(--chrome-h));
+  display: grid;
+  grid-template-columns: var(--rail-w) 1fr;
+  gap: 0;
+}
+
+#map {
+  position: relative;
+  height: 100%;
+  width: 100%;
+  background: var(--bg);
+}
+
+/* Leaflet tiles look better with a dark backdrop while loading. */
+.leaflet-container { background: var(--bg); }
+
+/* ─── Status rail ──────────────────────────────────────────────── */
+
+#rail {
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  overflow-y: auto;
+  padding: 14px 14px 18px;
+  display: flex; flex-direction: column; gap: 12px;
+  font-size: var(--fs-sm);
+}
+
+.card {
+  background: var(--surface-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
+}
+.card.compact { padding: 10px 12px; }
+
+.card h2 {
+  margin: 0 0 6px;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--text-primary);
+  display: flex; align-items: center; gap: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.card h2 .swatch {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  flex: 0 0 10px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+}
+.card h2 .swatch.real      { background: var(--accent-real); }
+.card h2 .swatch.synthetic { background: var(--accent-synthetic); }
+.card h2 .swatch.operator  { background: var(--accent-operator); }
+
+.card .subtitle {
+  margin: 0 0 8px;
+  font-size: var(--fs-xs);
+  color: var(--text-muted);
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.card .metric-row {
+  display: flex; align-items: baseline; justify-content: space-between;
+  gap: 8px;
+}
+.card .count {
+  font-size: var(--fs-xl);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  color: var(--text-primary);
+}
+.card .count.muted { color: var(--text-muted); }
+.card .count-label {
+  font-size: var(--fs-xs);
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.card .freshness {
+  margin-top: 10px;
+  display: flex; align-items: center; gap: 8px;
+  font-size: var(--fs-xs);
+  font-variant-numeric: tabular-nums;
+  color: var(--text-muted);
+}
+.card .freshness .dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--text-faint);
+  flex: 0 0 8px;
+}
+.card .freshness[data-state="fresh"] .dot { background: var(--accent-pass); }
+.card .freshness[data-state="fresh"]      { color: var(--accent-pass); }
+.card .freshness[data-state="warm"]  .dot { background: var(--accent-amber); }
+.card .freshness[data-state="warm"]       { color: var(--accent-amber); }
+.card .freshness[data-state="stale"] .dot { background: var(--accent-warn); }
+.card .freshness[data-state="stale"]      { color: var(--accent-warn); }
+.card .freshness[data-state="idle"]  .dot { background: var(--text-faint); }
+.card .freshness[data-state="idle"]       { color: var(--text-faint); }
+
+.card .seller {
+  margin-top: 6px;
+  font-size: var(--fs-xs);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  color: var(--text-faint);
+  word-break: break-all;
+}
+
+/* Legacy aircraft bucket card — small, secondary. */
+.card.legacy {
+  background: transparent;
+  border-style: dashed;
+}
+.card.legacy h2 { color: var(--text-muted); }
+.card.legacy .count { color: var(--text-muted); font-size: var(--fs-lg); }
+.card.legacy .subtitle { color: var(--text-faint); }
+
+/* Region-jump pair, anchored at the bottom of the rail. */
+.region-jump {
+  display: flex; flex-direction: column; gap: 6px;
+  margin-top: auto;
+}
+.region-jump button {
+  background: var(--surface-elevated);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  padding: 8px 12px;
+  border-radius: var(--radius-sm);
+  font-size: var(--fs-sm);
+  display: flex; align-items: center; gap: 8px;
+  text-align: left;
+}
+.region-jump button:hover {
+  background: var(--border);
+  border-color: var(--text-faint);
+}
+.region-jump button:focus-visible {
+  outline: 2px solid var(--accent-real);
+  outline-offset: 2px;
+}
+.region-jump button .pin {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  flex: 0 0 8px;
+}
+.region-jump button .pin.real      { background: var(--accent-real); }
+.region-jump button .pin.synthetic { background: var(--accent-synthetic); }
+
+/* ─── Floating legend ──────────────────────────────────────────── */
+
+#legend {
+  position: absolute;
+  top: calc(var(--chrome-h) + 14px);
+  right: 16px;
+  z-index: 1000;
+  background: var(--surface-translucent);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 10px 12px;
+  font-size: var(--fs-xs);
+  line-height: 1.7;
+  backdrop-filter: blur(6px);
+  box-shadow: var(--shadow-md);
+}
+#legend .group {
+  margin-bottom: 6px;
+}
+#legend .group:last-child { margin-bottom: 0; }
+#legend .group-title {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  margin-bottom: 2px;
+}
+#legend .row {
+  display: flex; align-items: center; gap: 8px;
+  color: var(--text-primary);
+}
+#legend .row .sym {
+  width: 14px; height: 14px;
+  flex: 0 0 14px;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+#legend .row .sym .real      { color: var(--accent-real); }
+#legend .row .sym .synthetic { color: var(--accent-synthetic); }
+#legend .row .sym .operator  { color: var(--accent-operator); }
+#legend .row .src {
+  color: var(--text-faint);
+  font-size: 10px;
+  margin-left: auto;
+}
+#legend .row .pill {
+  font-size: 9px;
+  font-weight: 700;
+  padding: 0 5px;
+  border-radius: 3px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+#legend .row .pill.real {
+  background: rgba(56, 189, 248, 0.18);
+  color: var(--accent-real);
+}
+#legend .row .pill.synthetic {
+  background: rgba(251, 191, 36, 0.18);
+  color: var(--accent-synthetic);
+}
+
+/* ─── Map markers ──────────────────────────────────────────────── */
+
+/* Override Leaflet's default divIcon padding. */
+.leaflet-div-icon {
+  background: transparent;
+  border: 0;
+}
+
+/* All entity-marker outer wrappers share the same dot-sized hit
+   target; the inner shape is injected per kind by app.js. */
+.marker {
+  position: relative;
+  width: 18px; height: 18px;
+  display: flex; align-items: center; justify-content: center;
+}
+.marker .shape {
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  border: 2px solid rgba(11, 14, 20, 0.9);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.12),
+              0 2px 4px rgba(0, 0, 0, 0.5);
+  background: var(--text-faint);
+}
+
+/* Drone (RID) — amber circle. Carries a heading chevron when track
+   is known (rotation set inline by app.js). */
+.marker.drone .shape {
+  background: var(--accent-synthetic);
+}
+.marker.drone .heading {
+  position: absolute;
+  top: -10px; left: 6px;
+  width: 0; height: 0;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-bottom: 8px solid var(--accent-synthetic);
+  filter: drop-shadow(0 0 1px rgba(11, 14, 20, 0.8));
+  transform-origin: 4px 18px;
+}
+
+/* Operator (pilot) — fuchsia diamond. Distinct shape so it doesn't
+   blur with drones when zoomed out. */
+.marker.operator .shape {
+  background: var(--accent-operator);
+  border-radius: 2px;
+  transform: rotate(45deg);
+}
+
+/* ADS-B real (normalized-track) — sky aircraft silhouette,
+   rotated by headingDeg. */
+.marker.normalized-track .shape {
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  width: 18px; height: 18px;
+  color: var(--accent-real);
+}
+.marker.normalized-track .heading-vector {
+  position: absolute;
+  top: -8px; left: 8px;
+  width: 2px; height: 18px;
+  background: linear-gradient(
+    to top,
+    rgba(56, 189, 248, 0.0),
+    rgba(56, 189, 248, 0.6)
+  );
+  transform-origin: 1px 18px;
+  border-radius: 1px;
+}
+
+/* Legacy aircraft (placeholder) — grey hollow ring, hidden by
+   default. The status rail "legacy bucket" card lets operators
+   confirm it stays at 0 in PASS state. */
+.marker.aircraft .shape {
+  background: transparent;
+  border-color: var(--text-muted);
+  width: 12px; height: 12px;
+}
+.marker.aircraft { opacity: 0.4; }
+
+/* Synthetic outline: any marker whose data is openly disclosed as
+   synthetic gets a dashed ring around the dot. Combined with the
+   amber/fuchsia hues this gives a redundant signal (color + shape)
+   for the real/synthetic split — no need to read the SYN text
+   badge to know. */
+.marker.synthetic .shape {
+  outline: 2px dashed currentColor;
+  outline-offset: 2px;
+}
+.marker.synthetic.drone .shape    { color: var(--accent-synthetic); }
+.marker.synthetic.operator .shape { color: var(--accent-operator); }
+
+/* SYN text badge — retained for screen readers + close-zoom
+   legibility. Anchored above-right of the marker. */
+.marker .syn-badge {
+  position: absolute;
+  top: -10px; left: 14px;
+  background: var(--accent-synthetic);
+  color: var(--bg);
+  font-size: 9px;
+  font-weight: 700;
+  padding: 1px 4px;
+  border-radius: 2px;
+  line-height: 1;
+  pointer-events: none;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  white-space: nowrap;
+}
+.marker.operator .syn-badge {
+  background: var(--accent-operator);
+}
+
+/* ─── Popups ───────────────────────────────────────────────────── */
+
+.leaflet-popup-content-wrapper {
+  background: var(--surface-elevated);
+  color: var(--text-primary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  padding: 0;
+}
+.leaflet-popup-content {
+  margin: 0;
+  font-size: var(--fs-sm);
+  line-height: 1.5;
+  min-width: 220px;
+}
+.leaflet-popup-tip {
+  background: var(--surface-elevated);
+  border: 1px solid var(--border);
+}
+.leaflet-popup-close-button {
+  color: var(--text-muted) !important;
+  padding: 6px 8px 0 0 !important;
+}
+
+.popup {
+  display: flex; flex-direction: column;
+}
+.popup .pop-head {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border-soft);
+}
+.popup .pop-head .id {
+  font-weight: 600;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: var(--fs-sm);
+  color: var(--text-primary);
+  word-break: break-all;
+  flex: 1 1 auto; min-width: 0;
+}
+.popup .pop-head .pill {
+  font-size: 9px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 3px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  flex: 0 0 auto;
+}
+.popup .pop-head .pill.real {
+  background: rgba(56, 189, 248, 0.16);
+  color: var(--accent-real);
+}
+.popup .pop-head .pill.synthetic {
+  background: rgba(251, 191, 36, 0.16);
+  color: var(--accent-synthetic);
+}
+.popup .pop-body {
+  padding: 8px 14px;
+}
+.popup .pop-body .row {
+  display: flex; justify-content: space-between; gap: 12px;
+  padding: 2px 0;
+  font-variant-numeric: tabular-nums;
+}
+.popup .pop-body .row .k {
+  color: var(--text-muted);
+  font-size: var(--fs-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.popup .pop-body .row .v {
+  color: var(--text-primary);
+  font-size: var(--fs-sm);
+  text-align: right;
+}
+.popup .pop-body .row .v.placeholder { color: var(--accent-amber); font-style: italic; }
+.popup .pop-foot {
+  padding: 8px 14px 10px;
+  border-top: 1px solid var(--border-soft);
+  font-size: var(--fs-xs);
+  color: var(--text-muted);
+  display: flex; flex-direction: column; gap: 2px;
+}
+.popup .pop-foot .seller {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  color: var(--text-faint);
+  word-break: break-all;
+}
+
+/* ─── Reduced motion ───────────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+/* ─── Small-viewport collapse (≥ 1024 px is the target; this is
+       a defensive fallback for narrow desk windows, not a phone
+       redesign — Phase 1 explicitly does not address mobile). ─── */
+
+@media (max-width: 900px) {
+  #stage {
+    grid-template-columns: 1fr;
+  }
+  #rail {
+    border-right: 0;
+    border-bottom: 1px solid var(--border);
+    max-height: 200px;
+  }
+}

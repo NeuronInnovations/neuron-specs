@@ -1,0 +1,7 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://neuron-sdk.org/specs/013-connectivity-profiles/contracts/profile-descriptor.schema.json",
+  "title": "Neuron Connectivity Profile Descriptor",
+  "description": "Placeholder schema stub for spec 013. The full JSON Schema with registered neuronProfileId enum, capability value constraints, and binding cross-references is produced by /speckit.plan. See ../spec.md section 'Profile Descriptor Model' for the normative field list and validation expectations.",
+  "type": "object"
+}

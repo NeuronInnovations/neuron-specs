@@ -1,0 +1,436 @@
+/* Neuron Agent Explorer — dark command-centre theme.
+ * Palette + marker/pill/popup idioms forked from cmd/sapient-fid-display
+ * (never imported; this is a separate sibling). Adds tactical glass panels,
+ * a tab switch, a collapsible roster sidebar, a floating detail drawer, and the
+ * Agent Registry table/detail. */
+
+:root {
+  --bg:          #0b1018;
+  --bg-2:        #0a0e14;
+  --panel:       #121a26;
+  --panel-edge:  #1e2a3c;
+  --glass:       rgba(18, 26, 38, .82);
+  --text:        #dbe6f4;
+  --text-muted:  #8294ab;
+  --text-2:      #b3c0d4;   /* readable secondary text (calmer than --text, far above --text-muted) */
+  --sapient:     #2dd4bf;   /* teal — SAPIENT drone track */
+  --aircraft:    #cbd5e1;   /* light slate — ADS-B aircraft (neuron.adsb/1) */
+  --operator:    #fbbf24;   /* amber — operator/pilot */
+  --agent:       #a78bfa;   /* violet — agent / wire */
+  --sensor:      #e879f9;   /* fuchsia — sensor / receiver */
+  --friendly:    #38bdf8;   /* sky — FRIENDLY demo pill */
+  --sim:         #f472b6;   /* pink — EIP-8004 SIM pill */
+  --wire:        #a78bfa;   /* violet — protobuf wire pill */
+  --ok:          #34d399;
+  --warn:        #fbbf24;
+  --bad:         #f87171;
+}
+
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body {
+  background: var(--bg); color: var(--text);
+  font: 14px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  display: flex; flex-direction: column;
+}
+.muted { color: var(--text-muted); }
+.hidden { display: none !important; }
+code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+
+/* Keyboard focus affordance (tactical, low-noise) for all interactive controls. */
+a:focus-visible, button:focus-visible, input:focus-visible, summary:focus-visible {
+  outline: 2px solid var(--sapient); outline-offset: 2px; border-radius: 6px;
+}
+
+/* ─── Header + tabs ─── */
+#chrome {
+  display: flex; align-items: center; gap: 18px;
+  padding: 10px 16px; background: var(--panel);
+  border-bottom: 1px solid var(--panel-edge);
+}
+.brand h1 { margin: 0; font-size: 16px; letter-spacing: .02em; }
+.brand .tagline { margin: 2px 0 0; font-size: 12px; color: var(--text-muted); }
+#tabs { display: flex; gap: 6px; margin-left: 8px; }
+.tab {
+  background: transparent; color: var(--text-muted);
+  border: 1px solid var(--panel-edge); border-radius: 8px;
+  padding: 7px 14px; font-size: 12.5px; font-weight: 600; cursor: pointer;
+  letter-spacing: .02em;
+}
+.tab:hover { color: var(--text); }
+.tab.active { color: var(--bg); background: var(--sapient); border-color: var(--sapient); }
+.chrome-actions { margin-left: auto; display: flex; gap: 8px; align-items: center; }
+.badge {
+  font-size: 11px; padding: 3px 10px; border-radius: 999px;
+  border: 1px solid var(--text-muted); color: var(--text-2); white-space: nowrap;
+}
+.badge[data-state="live"]         { color: var(--ok);   border-color: var(--ok); }
+.badge[data-state="up"]           { color: var(--ok);   border-color: var(--ok); }
+.badge[data-state="connecting"]   { color: var(--warn); border-color: var(--warn); }
+.badge[data-state="reconnecting"] { color: var(--bad);  border-color: var(--bad); }
+.badge[data-state="down"]         { color: var(--bad);  border-color: var(--bad); }
+
+/* ─── Stage + sidebar ─── */
+#stage { flex: 1; display: flex; min-height: 0; position: relative; }
+#sidebar {
+  width: 300px; min-width: 300px; background: var(--panel);
+  border-right: 1px solid var(--panel-edge);
+  display: flex; flex-direction: column; position: relative;
+  transition: min-width .15s ease, width .15s ease;
+}
+#sidebar.collapsed { width: 0; min-width: 0; }
+#sidebar.collapsed .side-inner { display: none; }
+#sidebarToggle {
+  position: absolute; top: 8px; right: -14px; z-index: 1200;
+  width: 22px; height: 26px; border-radius: 6px; cursor: pointer;
+  background: var(--panel); color: var(--text-muted);
+  border: 1px solid var(--panel-edge); font-size: 12px; line-height: 1;
+}
+#sidebar.collapsed #sidebarToggle { right: -16px; }
+.side-inner { padding: 12px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+#agentSearch {
+  width: 100%; padding: 7px 10px; border-radius: 8px;
+  background: var(--bg); color: var(--text); border: 1px solid var(--panel-edge); font-size: 12.5px;
+}
+.side-section-title { font-size: 10px; font-weight: 700; letter-spacing: .08em; color: var(--text-muted); margin-top: 4px; }
+
+#agentList { display: flex; flex-direction: column; gap: 6px; }
+.agent-item {
+  border: 1px solid var(--panel-edge); border-radius: 8px; padding: 8px 10px;
+  cursor: pointer; background: var(--bg); display: flex; flex-direction: column; gap: 4px;
+}
+.agent-item:hover { border-color: var(--sapient); }
+.agent-item.active { border-color: var(--sapient); box-shadow: inset 0 0 0 1px var(--sapient); }
+.agent-item .ai-top { display: flex; justify-content: space-between; gap: 8px; align-items: center; flex-wrap: wrap; min-width: 0; }
+.agent-item .ai-id { font-weight: 700; overflow-wrap: anywhere; }
+.agent-item .ai-sub { font-size: 10.5px; color: var(--text-muted); font-family: ui-monospace, Menlo, monospace; overflow-wrap: anywhere; }
+
+/* Counter row WRAPS — four 24px counters + labels exceed the 300px sidebar,
+   and an unwrapped flex row here is what produced the page-level horizontal
+   scrollbar (overflow-y:auto on .side-inner computes overflow-x to auto). */
+.counts { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: baseline; }
+.count { font-size: 24px; font-weight: 700; }
+.count.tracks { color: var(--sapient); }
+.count.operators { color: var(--operator); }
+.count-label { font-size: 11px; color: var(--text-muted); margin-left: 5px; }
+.freshness { display: flex; align-items: center; gap: 7px; font-size: 11px; color: var(--text-muted); }
+.freshness .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--panel-edge); }
+.freshness[data-state="fresh"] .dot { background: var(--ok); }
+.freshness[data-state="warm"]  .dot { background: var(--warn); }
+.freshness[data-state="stale"] .dot { background: var(--bad); }
+
+/* ─── Views ─── */
+.view { flex: 1; min-width: 0; position: relative; display: none; }
+.view.active { display: block; }
+#map { position: absolute; inset: 0; background: var(--bg-2); }
+
+/* ─── Glass panels ─── */
+.glass {
+  background: var(--glass); border: 1px solid var(--panel-edge); border-radius: 10px;
+  backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, .55);
+}
+
+/* Filters — shift left while the drawer is open (#view-map.drawer-open) so
+   the two panels sit side by side instead of overlapping; the drawer also
+   stacks above (950 vs 800) as a second line of defence. */
+#filters {
+  position: absolute; top: 12px; right: 12px; z-index: 800; padding: 10px 12px;
+  display: flex; flex-direction: column; gap: 5px; font-size: 12px; min-width: 140px;
+  transition: right .15s ease;
+}
+#view-map.drawer-open #filters { right: 344px; }
+.filters-title { font-size: 10px; font-weight: 700; letter-spacing: .08em; color: var(--text-muted); margin-bottom: 2px; }
+#filters label { display: flex; align-items: center; gap: 7px; cursor: pointer; }
+.sw { width: 10px; height: 10px; display: inline-block; }
+.sw.drone { border-radius: 50%; background: var(--sapient); }
+.sw.operator { transform: rotate(45deg); border: 2px solid var(--operator); }
+.sw.sensor { border-radius: 2px; border: 2px solid var(--sensor); }
+
+/* Legend */
+#legend { position: absolute; right: 12px; bottom: 24px; z-index: 800; padding: 10px 12px; font-size: 11.5px; }
+#legend .row { display: flex; align-items: center; gap: 8px; margin: 3px 0; }
+.mini { width: 11px; height: 11px; display: inline-block; }
+.mini.drone {
+  border-radius: 50%; background: var(--sapient);
+  border: 1.5px solid #0b1220; box-shadow: 0 0 0 1.5px rgba(255, 255, 255, .75);
+}
+.mini.aircraft {
+  background: var(--aircraft);
+  clip-path: polygon(50% 0%, 60% 38%, 100% 50%, 60% 60%, 56% 82%, 68% 92%, 68% 100%, 50% 92%, 32% 100%, 32% 92%, 44% 82%, 40% 60%, 0% 50%, 40% 38%);
+  filter: drop-shadow(0 0 1px #0f172a);
+}
+.mini.operator { transform: rotate(45deg); border: 2px solid var(--operator); }
+.mini.sensor { border-radius: 2px; border: 2px solid var(--sensor); }
+.mini.stale-demo { border-radius: 50%; background: var(--sapient); opacity: .35; filter: grayscale(.8); }
+
+/* Offline banner */
+.offline {
+  position: absolute; top: 12px; left: 50%; transform: translateX(-50%); z-index: 900;
+  background: rgba(248, 113, 113, .12); border: 1px solid var(--bad); color: #fecaca;
+  padding: 8px 14px; border-radius: 10px; font-size: 12.5px;
+}
+.offline code { color: #fff; }
+
+/* Floating detail drawer — top-right corner, ABOVE filters/legend (800) and
+   the offline banner (900): selected-object details are never hidden behind
+   another floating layer, and the × stays clickable. */
+.drawer {
+  position: absolute; top: 12px; right: 12px; z-index: 950; width: 320px;
+  max-height: calc(100% - 24px); overflow-y: auto; padding: 12px 14px;
+}
+.drawer-close {
+  position: absolute; top: 8px; right: 10px; background: transparent; border: none;
+  color: var(--text-muted); font-size: 18px; cursor: pointer; line-height: 1;
+}
+.drawer-close:hover { color: var(--text); }
+
+/* ─── Pills (honest labels) ─── */
+.pill {
+  font-size: 10px; font-weight: 700; letter-spacing: .04em;
+  padding: 2px 8px; border-radius: 999px; border: 1px solid; white-space: nowrap;
+}
+.pill.friendly { color: var(--friendly); border-color: var(--friendly); }
+.pill.sim      { color: var(--sim);      border-color: var(--sim); }
+.pill.onchain  { color: var(--ok);       border-color: var(--ok); }
+.pill.wire     { color: var(--wire);     border-color: var(--wire); }
+/* feed / sensor-source: readable SECONDARY chip (neutral text so it never competes
+   with the colored identity pills) + a leading liveness status dot. */
+.pill.feed, .pill.src {
+  color: var(--text-2); border-color: var(--text-muted);
+  background: rgba(130, 148, 171, .10);
+  display: inline-flex; align-items: center; gap: 5px;
+}
+.pill.feed::before, .pill.src::before {
+  content: ""; width: 6px; height: 6px; border-radius: 50%; flex: none;
+  background: var(--text-muted);
+}
+.pill.feed[data-feed="live"]        { color: var(--text); }
+.pill.feed[data-feed="live"]::before        { background: var(--ok);   box-shadow: 0 0 5px var(--ok); }
+.pill.feed[data-feed="replay"]::before      { background: var(--warn); }
+.pill.feed[data-feed="synthetic"]::before,
+.pill.feed[data-feed="placeholder"]::before { background: var(--text-muted); }
+.pill.est      { color: var(--warn);       border-color: var(--warn); }
+.pill.meta     { color: var(--text-2);     border-color: var(--text-muted); background: rgba(130, 148, 171, .10); }
+
+/* ─── Detail / popup sections (shared by drawer + registry detail) ─── */
+.pop-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-weight: 700; margin-bottom: 6px; flex-wrap: wrap; }
+.pop-head .id { font-family: ui-monospace, Menlo, monospace; font-size: 12.5px; overflow-wrap: anywhere; }
+.pills-strip { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0; }
+.sect { margin-top: 9px; padding-top: 6px; border-top: 1px dashed var(--panel-edge); font-size: 10px; font-weight: 700; letter-spacing: .06em; color: var(--text-muted); }
+.kv { display: flex; justify-content: space-between; gap: 12px; font-size: 12px; margin: 3px 0; }
+.kv .k { color: var(--text-muted); }
+.kv .v { text-align: right; overflow-wrap: anywhere; }
+.kv .v.mono { font-family: ui-monospace, Menlo, monospace; font-size: 11px; }
+.honest-note { font-size: 10.5px; color: var(--text-muted); font-style: italic; margin: 4px 0 0; }
+.drawer-foot { margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--panel-edge); display: flex; justify-content: space-between; align-items: center; font-size: 10.5px; color: var(--text-muted); }
+.linklike { background: transparent; border: 1px solid var(--panel-edge); color: var(--sapient); border-radius: 6px; padding: 4px 8px; cursor: pointer; font-size: 11px; }
+.linklike:hover { border-color: var(--sapient); }
+
+/* ─── Map markers (forked from sapient-fid-display; same treatment) ───
+ * The .marker div fills its (oversized) divIcon container, so the click
+ * target is ~30px while the visible glyph stays ~20-26px. Glyphs carry a
+ * dark outline + light halo so live tracks read on light AND dark tiles;
+ * heading rotation lives on inner elements so hitbox/ring stay aligned. */
+.marker { position: relative; width: 100%; height: 100%; cursor: pointer; }
+.marker:hover { transform: scale(1.18); }
+.marker.sapient-track .shape {
+  position: absolute; left: 50%; top: 50%;
+  width: 18px; height: 18px; margin: -9px 0 0 -9px; border-radius: 50%;
+  background: var(--sapient);
+  border: 2px solid #0b1220;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, .85), 0 0 10px rgba(45, 212, 191, .8);
+}
+.marker.sapient-track .heading { position: absolute; inset: 0; display: flex; justify-content: center; }
+.marker.sapient-track .heading::before {
+  content: ""; width: 0; height: 0; margin-top: -3px;
+  border-left: 5px solid transparent; border-right: 5px solid transparent;
+  border-bottom: 8px solid var(--sapient);
+  filter: drop-shadow(0 0 2px rgba(11, 18, 32, .9));
+}
+.marker.sapient-operator .shape {
+  position: absolute; left: 50%; top: 50%;
+  width: 13px; height: 13px; margin: -6.5px 0 0 -6.5px; transform: rotate(45deg);
+  background: transparent; border: 2.5px solid var(--operator);
+  box-shadow: 0 0 0 1.5px rgba(11, 18, 32, .75), 0 0 6px var(--operator);
+}
+.marker.sapient-sensor .shape {
+  position: absolute; left: 50%; top: 50%;
+  width: 13px; height: 13px; margin: -6.5px 0 0 -6.5px; border-radius: 2px;
+  background: transparent; border: 2px solid var(--sensor);
+  box-shadow: 0 0 0 1.5px rgba(11, 18, 32, .75), 0 0 6px var(--sensor);
+}
+.marker.sapient-sensor .shape::after { content: ""; position: absolute; inset: 3px; border-radius: 50%; background: var(--sensor); }
+.marker.sapient-sensor.estimated .shape { border-style: dashed; box-shadow: none; opacity: .8; }
+.marker.sapient-sensor.estimated .shape::after { background: transparent; }
+
+/* Stale fade + selected ring (live markers stay full-contrast) */
+.marker.stale { opacity: .45; filter: grayscale(.8); }
+.marker.selected::after {
+  content: ""; position: absolute; inset: -1px; border-radius: 50%;
+  border: 2px solid #fff; box-shadow: 0 0 8px rgba(255,255,255,.8), inset 0 0 6px rgba(11,18,32,.35);
+  pointer-events: none;
+}
+.marker.sapient-sensor.selected::after { border-radius: 5px; }
+
+/* ─── Registry view (two-pane master/detail) ─── */
+/* The wrap no longer scrolls as a whole; the list pane and detail pane scroll
+   independently, so the agent list stays on-screen while inspecting an agent. */
+#registryWrap { position: absolute; inset: 0; padding: 16px 18px; display: flex; flex-direction: column; gap: 12px; min-height: 0; }
+#registryHead { flex: none; }
+
+/* Breadcrumb: "Agent Registry [/ Agent #N]" — the root returns to the list. */
+#registryCrumb { display: flex; align-items: baseline; gap: 7px; flex-wrap: wrap; }
+.crumb-root { background: transparent; border: none; padding: 0; cursor: pointer; color: var(--text); font-size: 16px; font-weight: 700; letter-spacing: .01em; }
+.crumb-root:hover { color: var(--sapient); }
+.crumb-sep { color: var(--text-muted); font-size: 14px; }
+.crumb-current { color: var(--sapient); font-size: 15px; font-weight: 700; font-family: ui-monospace, Menlo, monospace; }
+
+/* Split: list (left) + detail (right), each its own scroll context. */
+#registrySplit { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); gap: 14px; }
+#registryListPane { min-height: 0; overflow: auto; }
+#registryDetailPane { min-height: 0; overflow: auto; display: flex; flex-direction: column; }
+#backToAgents { display: none; align-self: flex-start; margin-bottom: 8px; background: var(--panel); color: var(--sapient); border: 1px solid var(--panel-edge); border-radius: 7px; padding: 6px 12px; font-size: 12px; font-weight: 600; cursor: pointer; }
+#backToAgents:hover { border-color: var(--sapient); }
+
+#registryTableWrap { border: 1px solid var(--panel-edge); border-radius: 10px; overflow: hidden; }
+#registryTable { width: 100%; border-collapse: collapse; font-size: 12px; }
+#registryTable th { text-align: left; padding: 9px 12px; background: var(--panel); color: var(--text-muted); font-size: 10px; letter-spacing: .06em; border-bottom: 1px solid var(--panel-edge); }
+#registryTable td { padding: 9px 12px; border-bottom: 1px solid var(--panel-edge); font-family: ui-monospace, Menlo, monospace; font-size: 11px; overflow-wrap: anywhere; }
+#registryTable tr { cursor: pointer; }
+#registryTable tbody tr:hover { background: rgba(45, 212, 191, .06); }
+#registryTable tr.active { background: rgba(45, 212, 191, .10); }
+#registryTable td .pill { font-family: inherit; }
+.empty { padding: 22px; text-align: center; color: var(--text-muted); }
+
+#agentDetail { padding: 14px 16px; }
+#agentDetail .card-json { margin-top: 8px; }
+#agentDetail details { border: 1px solid var(--panel-edge); border-radius: 8px; padding: 6px 10px; background: var(--bg); }
+#agentDetail summary { cursor: pointer; font-size: 12px; font-weight: 600; color: var(--text); display: flex; align-items: center; gap: 8px; }
+/* Full Agent Card JSON: bounded internal scroll so it never traps the pane. */
+.card-json-pre { margin: 8px 0 0; max-height: 360px; overflow: auto; background: var(--bg-2); border: 1px solid var(--panel-edge); border-radius: 8px; padding: 10px; font-size: 11px; font-family: ui-monospace, Menlo, monospace; color: #c8d6ea; }
+.copy-btn { margin-left: auto; }
+.svc-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+.svc-chip { font-size: 10.5px; padding: 2px 8px; border-radius: 6px; border: 1px solid var(--panel-edge); color: var(--text-muted); }
+
+/* Narrow: collapse to one column with a list/detail toggle + sticky back button. */
+@media (max-width: 980px) {
+  #registrySplit { grid-template-columns: 1fr; }
+  #registrySplit:not(.show-detail) #registryDetailPane { display: none; }
+  #registrySplit.show-detail #registryListPane { display: none; }
+  #backToAgents { display: inline-flex; position: sticky; top: 0; z-index: 2; }
+}
+
+/* ─── Footer ─── */
+#honesty { padding: 6px 16px; font-size: 11px; color: var(--text-muted); background: var(--panel); border-top: 1px solid var(--panel-edge); }
+#honesty .wirelbl { color: var(--wire); }
+#honesty .frlbl { color: var(--friendly); }
+#honesty .simlbl { color: var(--sim); }
+#honesty .proj { color: var(--text); }
+
+/* ─── Leaflet popup (kept dark in case used) ─── */
+.leaflet-popup-content-wrapper { background: var(--panel); color: var(--text); border: 1px solid var(--panel-edge); border-radius: 10px; }
+.leaflet-popup-tip { background: var(--panel); }
+
+/* Per-modality recenter controls (forked from sapient-fid-display): one
+   button per modality with a live count badge; 0 live tracks → disabled. */
+.recenter-ctl { display: flex; flex-direction: column; gap: 6px; }
+.recenter-ctl a {
+  display: flex; align-items: center; gap: 6px;
+  padding: 6px 12px; font: 600 12px/1 system-ui, sans-serif; letter-spacing: .02em;
+  white-space: nowrap; text-decoration: none; color: var(--text);
+  background: var(--panel); border: 1px solid var(--panel-edge); border-radius: 6px;
+  box-shadow: 0 1px 4px rgba(0,0,0,.45); cursor: pointer;
+}
+.recenter-ctl a:hover { background: var(--panel-edge); }
+.recenter-ctl a .ct {
+  font-size: 10px; font-weight: 700; padding: 1px 6px; border-radius: 999px;
+  background: var(--panel-edge); color: var(--text);
+}
+.recenter-ctl a.disabled { opacity: .5; cursor: default; }
+.recenter-ctl a.disabled:hover { background: var(--panel); }
+.recenter-ctl a.disabled .ct { color: var(--text-muted); }
+
+/* ─── Guided onboarding (welcome card + spotlight tour) ─── */
+/* Header launcher: subtle, secondary to the tabs; teal on hover/focus. */
+.tour-btn {
+  background: transparent; color: var(--text-2);
+  border: 1px solid var(--panel-edge); border-radius: 999px;
+  padding: 4px 12px; font-size: 11.5px; font-weight: 600; cursor: pointer;
+  white-space: nowrap; letter-spacing: .01em;
+}
+.tour-btn:hover { color: var(--sapient); border-color: var(--sapient); }
+
+/* Overlay root: interaction blocker shown only while the tour is open. The dim
+   comes from the ring's box-shadow in spotlight mode; .modal adds a uniform dim
+   for the centered (no-target / small-screen) fallback. Fades in (150ms);
+   .hidden (global) hides it instantly. */
+.onboard {
+  position: fixed; inset: 0; z-index: 4000; background: transparent;
+  opacity: 0; transition: opacity .15s ease;
+}
+.onboard.open { opacity: 1; }
+.onboard.modal { background: rgba(8, 12, 20, .72); }
+
+/* Spotlight ring: highlights the target; its huge spread shadow dims the rest. */
+#onboardRing {
+  position: fixed; z-index: 1; border: 2px solid var(--sapient); border-radius: 10px;
+  box-shadow: 0 0 0 9999px rgba(8, 12, 20, .72), 0 0 16px rgba(45, 212, 191, .5);
+  pointer-events: none; transition: top .18s ease, left .18s ease, width .18s ease, height .18s ease;
+}
+#onboardRing.hidden { display: none !important; }
+
+/* Tour card: glass popover with the step copy + controls (above the ring). */
+#onboardCard {
+  position: fixed; z-index: 2; width: 360px; max-width: calc(100vw - 24px);
+  max-height: calc(100vh - 24px); overflow-y: auto; padding: 14px 16px 13px;
+}
+#onboardCard.centered { left: 50%; top: 50%; transform: translate(-50%, -50%); }
+.ob-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.ob-step { font-size: 10px; font-weight: 700; letter-spacing: .08em; color: var(--text-muted); text-transform: uppercase; }
+.ob-x { background: transparent; border: none; color: var(--text-muted); font-size: 18px; line-height: 1; cursor: pointer; padding: 0 2px; }
+.ob-x:hover { color: var(--text); }
+.ob-title { margin: 7px 0 6px; font-size: 15px; letter-spacing: .01em; color: var(--text); }
+.ob-body { font-size: 12.8px; line-height: 1.5; color: var(--text-2); }
+.ob-body strong { color: var(--text); font-weight: 700; }
+.ob-body code { background: var(--bg-2); border: 1px solid var(--panel-edge); border-radius: 4px; padding: 1px 5px; font-size: 11.5px; color: var(--text); font-family: ui-monospace, Menlo, monospace; }
+.ob-note { font-size: 11px; color: var(--text-muted); font-style: italic; margin: 9px 0 0; }
+.ob-foot { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 14px; }
+.ob-nav { display: flex; gap: 8px; }
+.ob-btn { border-radius: 7px; padding: 6px 14px; font-size: 12px; font-weight: 600; cursor: pointer; border: 1px solid var(--panel-edge); background: transparent; color: var(--text-2); }
+.ob-btn:hover { border-color: var(--sapient); color: var(--text); }
+.ob-btn.primary { background: var(--sapient); border-color: var(--sapient); color: var(--bg); }
+.ob-btn.primary:hover { filter: brightness(1.08); color: var(--bg); }
+.ob-skip { background: transparent; border: none; color: var(--text-muted); font-size: 11.5px; cursor: pointer; text-decoration: underline; padding: 6px 0; }
+.ob-skip:hover { color: var(--text-2); }
+
+/* ─── Narrow viewport guard (desktop-first console; keep usable on small screens) ─── */
+@media (max-width: 760px) {
+  #chrome { flex-wrap: wrap; gap: 10px; }
+  #sidebar { width: 220px; min-width: 220px; }
+  .drawer { left: 8px; right: 8px; width: auto; }
+  #filters { right: 8px; top: 8px; min-width: 0; }
+  /* No room for side-by-side panels: the (dismissible, z-950) drawer takes
+     over and the filter panel hides until it closes. */
+  #view-map.drawer-open #filters { display: none; }
+  #legend { display: none; }
+  /* Onboarding always falls back to a centered modal on small screens (the JS
+     also forces this; these rules guard a mid-tour resize). */
+  #onboardRing { display: none !important; }
+  .onboard.open { background: rgba(8, 12, 20, .72); }
+  #onboardCard { left: 50% !important; top: 50% !important; transform: translate(-50%, -50%) !important; }
+}
+
+/* ─── Multi-source additions (2026-06-11) ─── */
+.marker.sapient-aircraft { display: flex; align-items: center; justify-content: center; }
+.marker.sapient-aircraft svg {
+  display: block;
+  fill: var(--aircraft);
+  stroke: #0f172a; stroke-width: 1.6; paint-order: stroke;
+  filter: drop-shadow(0 1px 2px rgba(11, 18, 32, .6)) drop-shadow(0 0 6px rgba(255, 255, 255, .55));
+}
+.source-mini {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  font-size: 11.5px; padding: 4px 0;
+}
+.source-mini > span:first-child { min-width: 0; overflow-wrap: anywhere; }
